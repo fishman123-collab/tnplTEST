@@ -6,12 +6,8 @@
     <title>新總館志工「書香閱時光」平台</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
-        :root { --primary-color: #00B900;
-        --bg-color: #F4F7F6; --text-color: #333333; --secondary-text: #777777; --shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: flex-start; min-height: 100vh;
-        }
+        :root { --primary-color: #00B900; --bg-color: #F4F7F6; --text-color: #333333; --secondary-text: #777777; --shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
         .container { width: 100%; max-width: 500px; padding: 20px; box-sizing: border-box; }
         .header { text-align: center; margin-bottom: 20px; padding: 20px 0 10px; }
         .logo-placeholder { font-size: 40px; margin-bottom: 10px; }
@@ -22,7 +18,6 @@
         .section.active { display: block; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 綁定表單與打卡 UI */
         .bind-card, .form-section, .profile-card { background: white; padding: 20px; border-radius: 16px; box-shadow: var(--shadow); margin-bottom: 20px; }
         .bind-input, select, input[type="text"], input[type="number"], input[type="datetime-local"], input[type="date"], input[type="month"] { width: 100%; padding: 12px; margin-top: 5px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
         .bind-btn { background-color: var(--text-color); color: white; border: none; padding: 12px 30px; border-radius: 20px; font-size: 16px; cursor: pointer; width: 100%; font-weight: bold;}
@@ -31,25 +26,19 @@
         .profile-card { display: flex; align-items: center; }
         .profile-card img { width: 60px; height: 60px; border-radius: 50%; margin-right: 15px; }
 
-        /* 未審核提示與智慧打卡區塊 */
         .alert-box { background: #fff8e1; border-left: 4px solid #ffc107; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: none; }
         .smart-checkin-box { background: #e0f2f1; padding: 20px; border-radius: 12px; border: 2px solid #00897b; text-align: center; margin-bottom: 15px; display: none; }
 
-        /* 館員後台專屬樣式 */
         .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .admin-header h2 { margin: 0; font-size: 18px; }
         .refresh-btn { background: #eeeeee; border: none; padding: 8px 15px; border-radius: 15px; cursor: pointer; font-size: 14px; }
-        
         .record-card { background: white; border-radius: 12px; padding: 15px; box-shadow: var(--shadow); margin-bottom: 15px; border-left: 5px solid #ffc107; }
         .record-card.sign-in { border-left-color: #00B900; }
         .record-card.sign-out { border-left-color: #ff4d4f; }
-        
         .record-title { display: flex; justify-content: space-between; font-weight: bold; font-size: 16px; margin-bottom: 10px; }
         .record-tag { font-size: 12px; background: #eee; padding: 3px 8px; border-radius: 10px; }
-        
         .approve-btn { background-color: var(--text-color); color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; font-size: 16px; font-weight: bold; cursor: pointer; }
 
-        /* 彈出視窗 */
         .result-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; z-index: 1000; }
         .result-overlay.show { opacity: 1; visibility: visible; }
         .result-card { background-color: #ffffff; border-radius: 16px; padding: 30px; text-align: center; width: 80%; max-width: 320px; }
@@ -65,9 +54,7 @@
             <button id="sysAdminToggleBtn" onclick="toggleViewMode()" style="display:none; margin: 10px auto 0; background: #333; color: #fff; border: none; padding: 6px 15px; border-radius: 20px; font-size: 13px; font-weight:bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">🔄 切換為志工視角</button>
         </div>
 
-        <div id="sectionLoading" class="section active" style="text-align: center;">
-            <p>正在驗證您的身分，請稍候 ⏳</p>
-        </div>
+        <div id="sectionLoading" class="section active" style="text-align: center;"><p>正在驗證您的身分，請稍候 ⏳</p></div>
 
         <div id="sectionBind" class="section">
             <div class="bind-card">
@@ -95,25 +82,24 @@
 
             <div id="lastActionStatus" style="text-align:center; font-weight:bold; color:var(--secondary-text); margin-bottom: 10px; display:none;"></div>
 
+            <!-- 智慧打卡區塊 (簽到與簽退共用) -->
             <div id="smartCheckInArea" class="smart-checkin-box">
                 <div style="font-size: 30px; margin-bottom: 10px;">✨</div>
-                <div style="font-weight: bold; color: #00695c; font-size: 16px; margin-bottom: 10px;">系統偵測到您有一筆即將開始的勤務：</div>
+                <div id="smartCheckInTitle" style="font-weight: bold; color: #00695c; font-size: 16px; margin-bottom: 10px;">系統偵測到：</div>
                 <div id="smartShiftDetail" style="font-size: 16px; font-weight: bold; color: #d84315; margin-bottom: 15px; background:white; padding:10px; border-radius:8px;"></div>
                 
                 <button id="smartCheckInBtn" style="width: 100%; background: #00B900; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
-                    ✅ 沒錯，我要打 <span id="smartCheckTypeLabel"></span> 卡
+                    ✅ 沒錯，我要確認 <span id="smartCheckTypeLabel"></span>
                 </button>
-                <button onclick="showManualCheckIn()" style="background: none; border: none; color: #777; text-decoration: underline; cursor: pointer; font-size:14px;">
-                    班別不對或臨時支援，切換手動打卡
+                <button onclick="showManualCheckIn()" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; font-size:14px; margin-top:5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    🔄 切換至手動打卡 (班別不對或臨時支援)
                 </button>
             </div>
 
             <div id="manualCheckInArea" class="form-section">
                 <div style="font-size:14px; color:#d97706; font-weight:bold; margin-bottom:10px; text-align:center;">--- 手動打卡模式 ---</div>
                 <label style="font-weight: bold; display: block;">📋 服務內容：</label>
-                <select id="serviceSelect">
-                    <option value="" disabled selected>👉 請先選擇本次服務內容</option>
-                </select>
+                <select id="serviceSelect"><option value="" disabled selected>👉 請先選擇本次服務內容</option></select>
                 <label style="font-weight: bold; display: block; margin-top:10px;">⏱️ 打卡狀態：</label>
                 <div style="display: flex; gap: 20px; margin-top: 5px;">
                     <label><input type="radio" name="checkType" value="簽到"> 簽到</label>
@@ -121,8 +107,7 @@
                 </div>
                 <div class="action-card" style="margin-top:15px;">
                     <button class="checkin-btn" id="checkInBtn">
-                        <span style="font-size: 40px;">📍</span>
-                        <span id="checkInBtnText">點我打卡</span>
+                        <span style="font-size: 40px;">📍</span><span id="checkInBtnText">點我打卡</span>
                     </button>
                 </div>
             </div>
@@ -135,7 +120,6 @@
             <button onclick="openRecordsUI()" style="margin-top: 15px; width: 100%; background: #e0f2f1; color: #00897b; border: none; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <span>📊</span> 查詢我的服務紀錄
             </button>
-            
             <button id="leaderQueryBtn" onclick="openAdminQueryUI('volunteer')" style="display:none; margin-top: 10px; width: 100%; background: #fff8e1; color: #f57f17; border: 1px solid #ffe082; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; flex-direction: row; align-items: center; justify-content: center; gap: 8px;">
                 <span>👑</span> 幹部差勤查詢系統
             </button>
@@ -146,12 +130,10 @@
                 <button onclick="switchSection(document.getElementById('sectionCheckIn'))" style="background:none; border:none; font-size:16px; color:var(--primary-color); font-weight:bold; cursor:pointer;">⬅️ 返回打卡</button>
                 <h2 style="margin:0; font-size: 18px;">我的服務紀錄</h2>
             </div>
-
             <div style="display: flex; gap: 10px; margin-bottom: 20px;">
                 <button id="tabMonthly" onclick="switchRecordTab('monthly')" style="flex:1; padding:10px; border-radius:8px; border:none; background:var(--primary-color); color:white; font-weight:bold; cursor:pointer;">📅 單月明細</button>
                 <button id="tabYearly" onclick="switchRecordTab('yearly')" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ccc; background:white; color:var(--text-color); font-weight:bold; cursor:pointer;">📈 年度結算</button>
             </div>
-
             <div id="viewMonthly">
                 <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 15px; text-align: center;">
                     <label style="font-weight:bold; display:block; margin-bottom:8px; color:var(--secondary-text);">選擇查詢月份：</label>
@@ -163,7 +145,6 @@
                 </div>
                 <div id="monthlyListContainer"></div>
             </div>
-
             <div id="viewYearly" style="display:none;">
                 <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 15px; text-align: center;">
                     <label style="font-weight:bold; display:block; margin-bottom:8px; color:var(--secondary-text);">選擇結算年度：</label>
@@ -179,13 +160,9 @@
 
         <div id="sectionAdmin" class="section">
             <div class="profile-card" style="margin-bottom: 15px; padding: 15px;">
-                <div>
-                    <h2 id="staffName" style="margin: 0; font-size: 18px;">館員您好</h2>
-                    <p id="adminRole" style="margin: 3px 0 0; font-size: 13px; color: var(--secondary-text);">管理員模式已啟動</p>
-                </div>
+                <div><h2 id="staffName" style="margin: 0; font-size: 18px;">館員您好</h2><p id="adminRole" style="margin: 3px 0 0; font-size: 13px; color: var(--secondary-text);">管理員模式已啟動</p></div>
             </div>
-            
-               <div class="admin-header">
+            <div class="admin-header">
                 <h2>📋 待審核清單</h2>
                 <div style="display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end;">
                     <button class="refresh-btn" id="btnBatchMode" onclick="toggleBatchMode()" style="background:#e3f2fd; color:#1565c0; font-weight:bold;">☑️ 批次審核</button>
@@ -195,14 +172,10 @@
                     <button class="refresh-btn" onclick="fetchPendingRecords()">🔄 重整</button>
                 </div>
             </div>
-
             <button id="submitBatchBtn" onclick="submitBatchApprove()" style="display:none; width:100%; padding:15px; font-size:16px; font-weight:bold; background:#00B900; color:white; border:none; border-radius:8px; margin-bottom:15px; box-shadow:0 4px 6px rgba(0,0,0,0.1); cursor:pointer;">
                 ✅ 送出批次核准 (已選 0 筆)
             </button>
-
-            <div id="adminRecordsContainer">
-                <p style="text-align:center; color:gray;">載入資料中...</p>
-            </div>
+            <div id="adminRecordsContainer"><p style="text-align:center; color:gray;">載入資料中...</p></div>
         </div>
 
         <div id="sectionAdminQuery" class="section">
@@ -210,48 +183,32 @@
                 <button id="adminQueryBackBtn" style="background:none; border:none; font-size:16px; color:var(--primary-color); font-weight:bold; cursor:pointer;">⬅️ 返回</button>
                 <h2 style="margin:0; font-size: 18px;">差勤查詢系統</h2>
             </div>
-            
             <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 15px;">
                 <label style="font-weight:bold; display:block; margin-bottom:8px;">🔍 關鍵字搜尋：</label>
                 <input type="text" id="adminSearchInput" oninput="updateVolSelector(); renderAdminQuery();" placeholder="可輸入姓名,職稱,電話,Email,LINE名" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; margin-bottom:15px; box-sizing:border-box;">
-
                 <label style="font-weight:bold; display:block; margin-bottom:8px;">👥 選擇組別：</label>
-                <select id="adminGroupSelector" onchange="updateVolSelector(); renderAdminQuery();" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; margin-bottom:15px; font-weight:bold; color:var(--primary-color);">
-                    <option value="ALL">-- 所有組別 --</option>
-                </select>
-
+                <select id="adminGroupSelector" onchange="updateVolSelector(); renderAdminQuery();" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; margin-bottom:15px; font-weight:bold; color:var(--primary-color);"><option value="ALL">-- 所有組別 --</option></select>
                 <label style="font-weight:bold; display:block; margin-bottom:8px;">👤 選擇志工：</label>
-                <select id="adminVolSelector" onchange="renderAdminQuery()" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; margin-bottom:15px; font-weight:bold; color:var(--primary-color);">
-                    <option value="ALL">-- 所有名單 --</option>
-                </select>
-
+                <select id="adminVolSelector" onchange="renderAdminQuery()" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; margin-bottom:15px; font-weight:bold; color:var(--primary-color);"><option value="ALL">-- 所有名單 --</option></select>
                 <div style="display: flex; gap: 10px;">
                     <button id="adminTabMonthly" onclick="switchAdminQueryTab('monthly')" style="flex:1; padding:10px; border-radius:8px; border:none; background:var(--primary-color); color:white; font-weight:bold; cursor:pointer;">📅 單月</button>
                     <button id="adminTabYearly" onclick="switchAdminQueryTab('yearly')" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ccc; background:white; color:var(--text-color); font-weight:bold; cursor:pointer;">📈 年度</button>
                 </div>
             </div>
-
             <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 15px; text-align: center;">
-                <div id="adminMonthSelectWrapper">
-                    <input type="month" id="adminMonthSelector" onchange="renderAdminQuery()" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing:border-box;">
-                </div>
-                <div id="adminYearSelectWrapper" style="display:none;">
-                    <select id="adminYearSelector" onchange="renderAdminQuery()" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing:border-box;"></select>
-                </div>
-                
+                <div id="adminMonthSelectWrapper"><input type="month" id="adminMonthSelector" onchange="renderAdminQuery()" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing:border-box;"></div>
+                <div id="adminYearSelectWrapper" style="display:none;"><select id="adminYearSelector" onchange="renderAdminQuery()" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing:border-box;"></select></div>
                 <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #eee; display: flex; justify-content: space-between; align-items: center;">
                     <div style="text-align:left;">
                         <span style="font-size: 13px; color: var(--secondary-text);">查詢範圍總計</span>
                         <div id="adminQueryTotalHours" style="font-size: 24px; font-weight: bold; color: var(--primary-color);">0.0 <span style="font-size:14px;">hr</span></div>
                     </div>
-                    
                     <div style="display:flex; flex-direction:column; gap:8px;">
                         <button onclick="exportAdminQueryCSV()" style="background:#166534; color:white; border:none; padding:8px 15px; border-radius:8px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">📥 匯出明細報表</button>
                         <button id="exportSummaryBtn" onclick="exportYearlySummaryCSV()" style="display:none; background:#d97706; color:white; border:none; padding:8px 15px; border-radius:8px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">📊 匯出年度總表</button>
                     </div>
                 </div>
             </div>
-
             <div id="adminQueryListContainer"></div>
         </div>
 
@@ -260,47 +217,29 @@
                 <button onclick="switchSection(document.getElementById('sectionAdmin'))" style="background:none; border:none; font-size:16px; color:var(--primary-color); font-weight:bold; cursor:pointer;">⬅️ 返回審核</button>
                 <h2 style="margin:0; font-size: 18px;">✍️ 志工差勤補登</h2>
             </div>
-
             <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 15px;">
                 <label style="font-weight:bold; display:block; margin-bottom:8px;">👤 選擇志工：</label>
                 <input type="text" id="manualSearchInput" oninput="filterManualVolunteers()" placeholder="可輸入姓名或組別快速過濾..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; margin-bottom:10px; box-sizing:border-box;">
-                <select id="manualVolSelector" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; margin-bottom:15px; font-weight:bold; color:var(--primary-color);">
-                    <option value="">-- 資料載入中 --</option>
-                </select>
-
+                <select id="manualVolSelector" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; margin-bottom:15px; font-weight:bold; color:var(--primary-color);"><option value="">-- 資料載入中 --</option></select>
                 <label style="font-weight:bold; display:block; margin-bottom:8px;">📅 補登日期：</label>
                 <input type="date" id="manualDate" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; margin-bottom:15px; box-sizing:border-box;">
-
                 <label style="font-weight:bold; display:block; margin-bottom:8px;">🕒 補登時間 (24小時制)：</label>
                 <div style="display:flex; align-items:center; gap:5px; margin-bottom:15px;">
-                    <select id="manualHour" style="flex:1; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; font-weight:bold;"></select>
-                    <span style="font-weight:bold;">:</span>
-                    <select id="manualMin" style="flex:1; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; font-weight:bold;"></select>
+                    <select id="manualHour" style="flex:1; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; font-weight:bold;"></select><span style="font-weight:bold;">:</span><select id="manualMin" style="flex:1; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; font-weight:bold;"></select>
                 </div>
-
                 <label style="font-weight:bold; display:block; margin-bottom:8px;">📋 服務內容：</label>
                 <select id="manualService" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; margin-bottom:15px;"></select>
-
                 <label style="font-weight:bold; display:block; margin-bottom:8px;">⏱️ 打卡狀態：</label>
                 <div style="display: flex; gap: 20px; margin-bottom: 15px;">
                     <label><input type="radio" name="manualCheckType" value="簽到" checked onchange="toggleManualInputs()"> 簽到</label>
                     <label><input type="radio" name="manualCheckType" value="簽退" onchange="toggleManualInputs()"> 簽退</label>
                 </div>
-
                 <div style="display:flex; gap:10px; margin-bottom:15px;">
-                    <div style="flex:1;">
-                        <label style="font-weight:bold; display:block; margin-bottom:8px;">⭐ 加權：</label>
-                        <input type="number" id="manualMultiplier" value="1" step="0.5" min="1" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing:border-box;">
-                    </div>
-                    <div style="flex:1;">
-                        <label style="font-weight:bold; display:block; margin-bottom:8px;">➕ 加時：</label>
-                        <input type="number" id="manualExtraHours" value="0" step="0.5" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing:border-box;">
-                    </div>
+                    <div style="flex:1;"><label style="font-weight:bold; display:block; margin-bottom:8px;">⭐ 加權：</label><input type="number" id="manualMultiplier" value="1" step="0.5" min="1" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing:border-box;"></div>
+                    <div style="flex:1;"><label style="font-weight:bold; display:block; margin-bottom:8px;">➕ 加時：</label><input type="number" id="manualExtraHours" value="0" step="0.5" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing:border-box;"></div>
                 </div>
-                
                 <label style="font-weight:bold; display:block; margin-bottom:8px;">📝 備註 (選填)：</label>
                 <input type="text" id="manualRemark" placeholder="例：忘帶手機" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing:border-box;">
-
                 <button onclick="submitManualEntry()" style="width: 100%; background: #00B900; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">✅ 確認補登</button>
             </div>
         </div>
@@ -320,17 +259,12 @@
         const LIFF_ID = "2008914129-Q1XxBsw0"; 
         const GAS_URL = "https://script.google.com/macros/s/AKfycby9uXQYCxlI_ENBsh-3aG_cdZTMiW52f8ARtQjwchqCLoDFpg1drRjauMIvTMBkwjJU/exec"; 
 
-        let currentUserId = "";
-        let currentLineName = ""; 
-        let dbUserName = ""; 
-        let globalGroup = ""; 
-        let globalTitle = ""; 
-        let currentSmartShift = null; // 紀錄當前的智慧排班
+        let currentUserId = ""; let currentLineName = ""; let dbUserName = ""; let globalGroup = ""; let globalTitle = ""; 
+        let currentSmartShift = null; 
 
         const froggySuccessImg = `<img src="DK1.png" alt="成功" style="height:100px; margin-bottom:15px;">`;
         const froggyErrorImg = `<img src="DK2.png" alt="失敗" style="height:100px; margin-bottom:15px;">`;
 
-        // 格式化日期：加上星期幾
         function formatDateWithDay(dateStr) {
             const dateObj = new Date(dateStr.replace(/-/g, '/'));
             if (isNaN(dateObj.getTime())) return dateStr;
@@ -343,13 +277,10 @@
                 await liff.init({ liffId: LIFF_ID });
                 if (!liff.isLoggedIn()) { liff.login(); return; }
                 const profile = await liff.getProfile();
-                currentUserId = profile.userId;
-                currentLineName = profile.displayName; 
+                currentUserId = profile.userId; currentLineName = profile.displayName; 
                 document.getElementById('userAvatar').src = profile.pictureUrl;
                 checkBindingStatus();
-            } catch (err) { 
-                alert("系統初始化失敗，請確認網路連線或重啟 LINE。\n錯誤細節：" + err.message); 
-            }
+            } catch (err) { alert("系統初始化失敗，請確認網路連線或重啟 LINE。\n錯誤細節：" + err.message); }
         }
 
         function formatRoleDisplay(group, title) {
@@ -360,6 +291,14 @@
             else return `${group} - ${displayTitle}`;
         }
 
+        function showSmartCheckInUI(titleText, shiftObj) {
+            document.getElementById('smartCheckInArea').style.display = 'block';
+            document.getElementById('manualCheckInArea').style.display = 'none';
+            document.getElementById('smartCheckInTitle').innerText = titleText;
+            document.getElementById('smartShiftDetail').innerText = shiftObj.detail;
+            document.getElementById('smartCheckTypeLabel').innerText = shiftObj.expectedCheckType;
+        }
+
         function checkBindingStatus() {
             fetch(GAS_URL, {
                 method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -367,11 +306,8 @@
             }).then(res => res.json()).then(result => {
                 isCulturalHoursEnabled = result.culturalHoursEnabled || false;
                 buildDynamicServiceOptions();
-
                 if (result.status === "bound") {
                     dbUserName = result.name; globalGroup = result.group; globalTitle = result.title;
-                    
-                    // 處理未審核提醒
                     if (result.unapproved && result.unapproved.length > 0) {
                         document.getElementById('unapprovedAlert').style.display = 'block';
                         document.getElementById('unapprovedCount').innerText = result.unapproved.length;
@@ -379,35 +315,32 @@
                         result.unapproved.forEach(u => listHtml += `<li>${u.date} ${u.time} - ${u.type} (${u.service})</li>`);
                         document.getElementById('unapprovedList').innerHTML = listHtml;
                     }
-
-                    // 處理上一筆狀態
                     if (result.lastAction) {
                         const actionDiv = document.getElementById('lastActionStatus');
                         actionDiv.style.display = 'block';
                         actionDiv.innerText = `🔄 今日上一筆紀錄：【 ${result.lastAction} 】`;
                     }
-
-                    // 處理智慧打卡
                     if (result.smartShift) {
                         currentSmartShift = result.smartShift;
-                        document.getElementById('smartCheckInArea').style.display = 'block';
-                        document.getElementById('manualCheckInArea').style.display = 'none';
-                        document.getElementById('smartShiftDetail').innerText = currentSmartShift.detail;
-                        document.getElementById('smartCheckTypeLabel').innerText = currentSmartShift.expectedCheckType;
+                        showSmartCheckInUI("系統偵測到您有一筆即將開始的勤務：", currentSmartShift);
+                    } else if (result.lastAction === "簽到") {
+                        currentSmartShift = {
+                            detail: `📍 進行中勤務：${result.lastService}`,
+                            mappedService: result.lastService,
+                            expectedCheckType: "簽退"
+                        };
+                        showSmartCheckInUI("您有一筆勤務尚未簽退，請確認：", currentSmartShift);
                     } else {
                         document.getElementById('smartCheckInArea').style.display = 'none';
                         document.getElementById('manualCheckInArea').style.display = 'block';
                     }
-
                     if (result.role === "staff") setupAdminUI(globalGroup, globalTitle); 
                     else setupCheckInUI(globalGroup, globalTitle);
                 } else {
                     switchSection(document.getElementById('sectionBind'));
                     document.getElementById('systemSubtitle').innerText = "首次使用驗證";
                 }
-            }).catch(err => {
-                alert("⚠️ 系統連線異常！請確認網路或重新整理。");
-            });
+            }).catch(err => { alert("⚠️ 系統連線異常！請確認網路或重新整理。"); });
         }
 
         let isViewAsVolunteer = false;
@@ -430,8 +363,7 @@
                 body: JSON.stringify({ action: "bindAccount", userId: currentUserId, lineName: currentLineName, phone: phone })
             }).then(res => res.json()).then(result => {
                 if (result.status === "success") {
-                    dbUserName = result.name;
-                    isCulturalHoursEnabled = result.culturalHoursEnabled || false; 
+                    dbUserName = result.name; isCulturalHoursEnabled = result.culturalHoursEnabled || false; 
                     buildDynamicServiceOptions();
                     alert("綁定成功！歡迎，" + dbUserName);
                     if (result.role === "staff") setupAdminUI(result.group, result.title);
@@ -440,7 +372,6 @@
             });
         });
 
-        // --- 志工打卡 UI ---
         function setupCheckInUI(group, title) {
             switchSection(document.getElementById('sectionCheckIn'));
             document.getElementById('systemSubtitle').innerText = "定位打卡/時數查詢系統";
@@ -459,12 +390,10 @@
             document.getElementById('manualCheckInArea').style.display = 'block';
         }
 
-        // 智慧打卡事件
         document.getElementById('smartCheckInBtn').addEventListener('click', () => {
             executeCheckIn(currentSmartShift.mappedService, currentSmartShift.expectedCheckType, document.getElementById('smartCheckInBtn'));
         });
 
-        // 手動打卡事件(加入防呆)
         document.getElementById('checkInBtn').addEventListener('click', () => {
             const serviceType = document.getElementById('serviceSelect').value;
             const checkTypeInput = document.querySelector('input[name="checkType"]:checked');
@@ -473,53 +402,31 @@
             executeCheckIn(serviceType, checkTypeInput.value, document.getElementById('checkInBtn'));
         });
 
-        // 共用打卡執行邏輯
         function executeCheckIn(serviceType, checkType, btnElement) {
             const originalText = btnElement.innerHTML;
             const statusMsg = document.getElementById('statusMsg');
             btnElement.disabled = true; btnElement.innerText = "定位中...";
             statusMsg.innerHTML = "正在取得 GPS 定位，請稍候...";
-            
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
                     statusMsg.innerHTML = "定位成功，資料傳送中...";
                     fetch(GAS_URL, {
                         method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-                        body: JSON.stringify({
-                            action: "checkIn", userId: currentUserId, lat: pos.coords.latitude, lng: pos.coords.longitude,
-                            serviceType: serviceType, checkType: checkType
-                        })
+                        body: JSON.stringify({ action: "checkIn", userId: currentUserId, lat: pos.coords.latitude, lng: pos.coords.longitude, serviceType: serviceType, checkType: checkType })
                     }).then(res => res.json()).then(result => {
                         if (result.status === "success") {
                             const timeStr = new Date().toLocaleTimeString('zh-TW', { hour12: false });
                             const distanceInfo = result.distance !== undefined ? `\n📏 距離：${result.distance} 公尺` : "";
                             const detailMsg = `👤 姓名：${dbUserName}\n📋 服務：${serviceType}\n⏱️ 狀態：${checkType}${distanceInfo}\n⏰ 時間：${timeStr}`;
-                            const mainHtml = `
-                                <div style="color: #00B900; font-weight: bold; font-size: 16px; margin-bottom: 10px;">✅ 打卡成功明細</div>
-                                <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0; font-size: 15px; line-height: 1.8; color: #166534; text-align: left;">
-                                    <div><b>👤 姓名：</b>${dbUserName}</div>
-                                    <div><b>📋 服務：</b>${serviceType}</div>
-                                    <div><b>⏱️ 狀態：</b>${checkType}</div>
-                                    ${result.distance !== undefined ? `<div><b>📏 距離：</b>${result.distance} 公尺</div>` : ""}
-                                    <div style="margin-top: 5px; border-top: 1px dashed #86efac; padding-top: 5px;">
-                                        <b>⏰ 時間：</b><span style="font-weight: bold; font-size: 16px;">${timeStr}</span>
-                                     </div>
-                                </div>
-                            `;
-                            showPopup(true, "打卡成功！", detailMsg);
-                            statusMsg.innerHTML = mainHtml; 
+                            const mainHtml = `<div style="color: #00B900; font-weight: bold; font-size: 16px; margin-bottom: 10px;">✅ 打卡成功明細</div><div style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0; font-size: 15px; line-height: 1.8; color: #166534; text-align: left;"><div><b>👤 姓名：</b>${dbUserName}</div><div><b>📋 服務：</b>${serviceType}</div><div><b>⏱️ 狀態：</b>${checkType}</div>${result.distance !== undefined ? `<div><b>📏 距離：</b>${result.distance} 公尺</div>` : ""}<div style="margin-top: 5px; border-top: 1px dashed #86efac; padding-top: 5px;"><b>⏰ 時間：</b><span style="font-weight: bold; font-size: 16px;">${timeStr}</span></div></div>`;
+                            showPopup(true, "打卡成功！", detailMsg); statusMsg.innerHTML = mainHtml; 
                         } else {
-                            showPopup(false, "打卡失敗", result.message);
-                            statusMsg.innerHTML = `<span style="color:#ff4d4f; font-weight:bold;">❌ 打卡失敗：</span><br>${result.message}`;
+                            showPopup(false, "打卡失敗", result.message); statusMsg.innerHTML = `<span style="color:#ff4d4f; font-weight:bold;">❌ 打卡失敗：</span><br>${result.message}`;
                         }
                         btnElement.disabled = false; btnElement.innerHTML = originalText;
                     });
                 },
-                (err) => { 
-                    showPopup(false, "定位失敗", "請確認手機已開啟位置權限。");
-                    statusMsg.innerHTML = `<span style="color:#ff4d4f; font-weight:bold;">❌ 定位失敗：</span>請確認手機已開啟位置權限。`;
-                    btnElement.disabled = false; btnElement.innerHTML = originalText;
-                },
+                (err) => { showPopup(false, "定位失敗", "請確認手機已開啟位置權限。"); statusMsg.innerHTML = `<span style="color:#ff4d4f; font-weight:bold;">❌ 定位失敗：</span>請確認手機已開啟位置權限。`; btnElement.disabled = false; btnElement.innerHTML = originalText; },
                 { enableHighAccuracy: true, timeout: 10000 }
             );
         }
@@ -527,11 +434,8 @@
         // --- 館員 UI ---
         function setupAdminUI(group, title) {
             switchSection(document.getElementById('sectionAdmin'));
-            document.getElementById('systemSubtitle').innerText = "館員管理中心";
-            document.getElementById('staffName').innerText = "您好，" + dbUserName;
-            
+            document.getElementById('systemSubtitle').innerText = "館員管理中心"; document.getElementById('staffName').innerText = "您好，" + dbUserName;
             if (title === "系統管理員") document.getElementById('sysAdminToggleBtn').style.display = 'block';
-
             let displayRole = "管理員模式已啟動";
             if (group && title) displayRole = title === "系統管理員" ? `系統管理員 (所屬：${group})` : `${group} - ${title}`;
             document.getElementById('adminRole').innerText = displayRole;
@@ -541,26 +445,15 @@
         function fetchPendingRecords() {
             const container = document.getElementById('adminRecordsContainer');
             container.innerHTML = '<p style="text-align:center; color:gray;">撈取資料中...</p>';
-            
             fetch(GAS_URL, {
                 method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify({ action: "getPendingRecords" })
             }).then(res => res.json()).then(result => {
                 if(result.status === "success") {
                     container.innerHTML = "";
-                    if (result.data.length === 0) {
-                        container.innerHTML = '<p style="text-align:center; color:#00B900; font-weight:bold;">🎉 目前沒有待審核的紀錄！</p>';
-                        return;
-                    }
+                    if (result.data.length === 0) { container.innerHTML = '<p style="text-align:center; color:#00B900; font-weight:bold;">🎉 目前沒有待審核的紀錄！</p>'; return; }
                     
-                    const getOptions = (max, selected) => {
-                        let opts = '';
-                        for(let i=0; i<=max; i++) {
-                            let val = i.toString().padStart(2, '0');
-                            opts += `<option value="${val}" ${val === selected ? 'selected' : ''}>${val}</option>`;
-                        }
-                        return opts;
-                    };
+                    const getOptions = (max, selected) => { let opts = ''; for(let i=0; i<=max; i++) { let val = i.toString().padStart(2, '0'); opts += `<option value="${val}" ${val === selected ? 'selected' : ''}>${val}</option>`; } return opts; };
 
                     result.data.forEach(record => {
                         const card = document.createElement('div');
@@ -570,19 +463,32 @@
                         
                         const timeLabel = isSignIn ? '簽到時間' : '簽退時間';
                         const [datePart, timePart] = record.timestamp.split('T');
-                        const displayDate = formatDateWithDay(datePart); // 加上星期
+                        const displayDate = formatDateWithDay(datePart); 
                         const [origHour, origMin] = timePart.split(':');
-                        
-                        const styles = isSignIn 
-                            ? { bg: '#f0fdf4', border: '#bbf7d0', text: '#166534', input: '#00B900' }
-                            : { bg: '#fff1f0', border: '#ffa39e', text: '#a8071a', input: '#ff4d4f' };
+                        const styles = isSignIn ? { bg: '#f0fdf4', border: '#bbf7d0', text: '#166534', input: '#00B900' } : { bg: '#fff1f0', border: '#ffa39e', text: '#a8071a', input: '#ff4d4f' };
              
-                        const multiplierHtml = isSignIn 
+                        // 📍 簽到時顯示下拉選單與加時，簽退時鎖定隱藏
+                        const serviceHtml = isSignIn 
+                            ? `<label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">📋 服務內容：</label>
+                               <select id="srv_${record.uuid}" style="margin:0; padding:8px; border-radius:6px; border:1px solid #ccc; width:100%; box-sizing:border-box;">
+                                  <option value="活動支援" ${record.serviceType==="活動支援"?"selected":""}>活動支援</option>
+                                  <option value="五感值班" ${record.serviceType==="五感值班"?"selected":""}>五感值班</option>
+                                  <option value="創客值班" ${record.serviceType==="創客值班"?"selected":""}>創客值班</option>
+                                  <option value="導覽" ${record.serviceType==="導覽"?"selected":""}>導覽</option>
+                               </select>`
+                            : `<input type="hidden" id="srv_${record.uuid}" value="${record.serviceType}">
+                               <div style="font-size:14px; color:#555; background:#f5f5f5; padding:8px; border-radius:6px; border:1px solid #ddd; width:100%; box-sizing:border-box; font-weight:bold;">📍 簽退 (自動同簽到服務：${record.serviceType})</div>`;
+
+                        const multiplierExtraHtml = isSignIn 
                             ? `<div style="flex:1;">
                                    <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">⭐ 加權：</label>
                                    <input type="number" id="mul_${record.uuid}" value="1" step="0.5" min="1" style="margin:0; padding:8px; border-radius:6px; border:1px solid #ccc; width:100%; box-sizing:border-box;">
+                               </div>
+                               <div style="flex:1;">
+                                   <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">➕ 加時：</label>
+                                   <input type="number" id="ext_${record.uuid}" value="0" step="0.5" style="margin:0; padding:8px; border-radius:6px; border:1px solid #ccc; width:100%; box-sizing:border-box;">
                                </div>`
-                            : `<input type="hidden" id="mul_${record.uuid}" value="1">`;
+                            : `<input type="hidden" id="mul_${record.uuid}" value="1"><input type="hidden" id="ext_${record.uuid}" value="0">`;
                             
                         card.innerHTML = `
                             <div class="record-title" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleCardCheckbox('${record.uuid}', event)">
@@ -592,43 +498,22 @@
                                 </div>
                                 <span class="record-tag">${record.checkType}</span>
                             </div>
-                            
                             <div style="font-size:14px; margin-bottom:15px; background: ${styles.bg}; padding: 12px; border-radius: 8px; border: 1px solid ${styles.border}; display: flex; align-items: center; flex-wrap: wrap; gap: 5px;">
-                                <span style="font-weight:bold; color:${styles.text};">🕒 ${timeLabel}：</span> 
-                                <span style="color:${styles.text}; margin-right: 5px;">${displayDate}</span>
+                                <span style="font-weight:bold; color:${styles.text};">🕒 ${timeLabel}：</span> <span style="color:${styles.text}; margin-right: 5px;">${displayDate}</span>
                                 <div style="display:flex; align-items:center; gap:3px;">
-                                    <select id="hour_${record.uuid}" data-date="${datePart}" style="border: 1px solid ${styles.input}; color: ${styles.input}; font-weight: bold; font-size: 16px; background: white; padding: 4px; border-radius: 6px; cursor: pointer; outline: none;">
-                                        ${getOptions(23, origHour)}
-                                    </select>
+                                    <select id="hour_${record.uuid}" data-date="${datePart}" style="border: 1px solid ${styles.input}; color: ${styles.input}; font-weight: bold; font-size: 16px; background: white; padding: 4px; border-radius: 6px; cursor: pointer; outline: none;">${getOptions(23, origHour)}</select>
                                     <span style="font-weight:bold; color:${styles.input};">:</span>
-                                    <select id="min_${record.uuid}" style="border: 1px solid ${styles.input}; color: ${styles.input}; font-weight: bold; font-size: 16px; background: white; padding: 4px; border-radius: 6px; cursor: pointer; outline: none;">
-                                        ${getOptions(59, origMin)}
-                                    </select>
+                                    <select id="min_${record.uuid}" style="border: 1px solid ${styles.input}; color: ${styles.input}; font-weight: bold; font-size: 16px; background: white; padding: 4px; border-radius: 6px; cursor: pointer; outline: none;">${getOptions(59, origMin)}</select>
                                 </div>
                             </div>
-                            
                             <div style="display:flex; gap:10px; align-items: flex-end; margin-bottom: 10px;">
-                                <div style="flex:1.5;">
-                                    <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">📋 服務內容：</label>
-                                    <select id="srv_${record.uuid}" style="margin:0; padding:8px; border-radius:6px; border:1px solid #ccc; width:100%; box-sizing:border-box;">
-                                        <option value="活動支援" ${record.serviceType==="活動支援"?"selected":""}>活動支援</option>
-                                        <option value="五感值班" ${record.serviceType==="五感值班"?"selected":""}>五感值班</option>
-                                        <option value="創客值班" ${record.serviceType==="創客值班"?"selected":""}>創客值班</option>
-                                        <option value="導覽" ${record.serviceType==="導覽"?"selected":""}>導覽</option>
-                                    </select>
-                                </div>
-                                ${multiplierHtml}
-                                <div style="flex:1;">
-                                    <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">➕ 加時：</label>
-                                    <input type="number" id="ext_${record.uuid}" value="0" step="0.5" style="margin:0; padding:8px; border-radius:6px; border:1px solid #ccc; width:100%; box-sizing:border-box;">
-                                </div>
+                                <div style="flex:1.5;">${serviceHtml}</div>
+                                ${multiplierExtraHtml}
                             </div>
-
                             <div style="margin-bottom: 15px;">
                                 <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">📝 館員備註：</label>
                                 <input type="text" id="rem_${record.uuid}" placeholder="選填" style="margin:0; padding:8px; width:100%; box-sizing:border-box; border-radius:6px; border:1px solid #ccc;">
                             </div>
-                            
                             <button class="approve-btn" id="btnApprove_${record.uuid}" onclick="approveRecord('${record.uuid}')">✅ 確認核准</button>
                         `;
                         container.appendChild(card);
@@ -638,8 +523,7 @@
         }
 
         function approveRecord(uuid) {
-            const hourSelect = document.getElementById(`hour_${uuid}`);
-            const minSelect = document.getElementById(`min_${uuid}`);
+            const hourSelect = document.getElementById(`hour_${uuid}`); const minSelect = document.getElementById(`min_${uuid}`);
             const datePart = hourSelect.getAttribute('data-date'); 
             const newTime = `${datePart}T${hourSelect.value}:${minSelect.value}`; 
             
@@ -648,8 +532,7 @@
             const extraHours = document.getElementById(`ext_${uuid}`).value;
             const remark = document.getElementById(`rem_${uuid}`).value;
             
-            const btn = event.target;
-            btn.disabled = true; btn.innerText = "處理中...";
+            const btn = event.target; btn.disabled = true; btn.innerText = "處理中...";
             fetch(GAS_URL, {
                 method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify({ 
@@ -663,18 +546,39 @@
             });
         }
 
-        // --- 共用輔助 ---
         function switchSection(targetSection) {
             document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
             targetSection.classList.add('active');
         }
         function showPopup(isSuccess, title, msg) {
             document.getElementById('resultIcon').innerHTML = isSuccess ? froggySuccessImg : froggyErrorImg;
-            document.getElementById('resultStatus').innerText = title;
-            document.getElementById('resultDistance').innerText = msg;
+            document.getElementById('resultStatus').innerText = title; document.getElementById('resultDistance').innerText = msg;
             document.getElementById('resultOverlay').classList.add('show');
         }
         initializeApp();
+
+        // 共用卡片產生器 (月度/年度/志工/館員通用)
+        function generateRecordCardHtml(r, showName = false) {
+            const extraText = r.extraHours > 0 ? `<span style="color:#059669; font-size:12px; font-weight:bold; background:#d1fae5; padding:2px 6px; border-radius:4px; margin-left:5px;">➕加時 +${r.extraHours}</span>` : "";
+            const multiplierText = r.multiplier > 1 ? `<span style="color:#d97706; font-size:12px; font-weight:bold; background:#fef3c7; padding:2px 6px; border-radius:4px; margin-left:5px;">⭐x${r.multiplier}</span>` : "";
+            const remarkHtml = r.remark ? `<div style="font-size:13px; color:#888; margin-top:5px; border-top:1px dashed #eee; padding-top:5px;">📝 備註：${r.remark}</div>` : "";
+            const hoursDisplay = r.multiplier > 1 || r.extraHours > 0 ? `<span style="font-size:13px; color:#888; font-weight:normal; margin-bottom:3px; display:block;">(原始 ${r.rawHours.toFixed(1)})</span>${r.finalHours.toFixed(1)} <span style="font-size:12px;">hr</span>` : `${r.finalHours.toFixed(1)} <span style="font-size:12px;">hr</span>`;
+            let nameHtml = showName ? `<div style="font-weight:bold; font-size:16px; margin-bottom:5px;">👤 ${r.volunteerName}</div>` : "";
+            return `
+                <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 12px; border-left: 4px solid var(--primary-color);">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; border-bottom: 1px dashed #eee; padding-bottom: 8px;">
+                        <div>
+                            ${nameHtml}
+                            <div style="${showName?'font-size:12px; color:#666;':'font-weight:bold; font-size:16px;'}">📅 ${formatDateWithDay(r.date)}</div>
+                        </div>
+                        <div style="font-weight:bold; color:var(--primary-color); font-size:16px; text-align:right; line-height: 1.2;">${hoursDisplay}</div>
+                    </div>
+                    <div style="font-size:13px; color:#555; margin-bottom:5px;">⏱️ ${r.startTime} ~ ${r.endTime} &nbsp; 📍 ${r.serviceType} ${multiplierText} ${extraText}</div>
+                    <div style="font-size:12px; color:#00897b; font-weight:bold; background:#e0f2f1; display:inline-block; padding:3px 8px; border-radius:10px;">✅ 確認館員：${r.staffName || '系統'}</div>
+                    ${remarkHtml}
+                </div>
+            `;
+        }
 
         // ==========================================
         // 志工服務紀錄查詢邏輯
@@ -682,75 +586,44 @@
         let allVolunteerRecords = [];
         function openRecordsUI() {
             switchSection(document.getElementById('sectionRecords'));
-            const now = new Date();
-            const currentMonth = now.toISOString().slice(0, 7); 
-            const currentYear = currentMonth.slice(0, 4);
+            const now = new Date(); const currentMonth = now.toISOString().slice(0, 7); const currentYear = currentMonth.slice(0, 4);
             document.getElementById('monthSelector').value = currentMonth;
-            
-            const yearSelect = document.getElementById('yearSelector');
-            yearSelect.innerHTML = "";
-            for (let y = parseInt(currentYear); y >= parseInt(currentYear) - 2; y--) {
-                yearSelect.innerHTML += `<option value="${y}">${y} 年</option>`;
-            }
-
+            const yearSelect = document.getElementById('yearSelector'); yearSelect.innerHTML = "";
+            for (let y = parseInt(currentYear); y >= parseInt(currentYear) - 2; y--) yearSelect.innerHTML += `<option value="${y}">${y} 年</option>`;
             document.getElementById('monthlyListContainer').innerHTML = '<p style="text-align:center; color:gray;">資料載入中 ⏳...</p>';
             fetch(GAS_URL, {
                 method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify({ action: "getVolunteerRecords", userId: currentUserId })
             }).then(res => res.json()).then(result => {
-                if(result.status === "success") {
-                    allVolunteerRecords = result.data;
-                    renderMonthlyRecords(); 
-                } else alert("載入失敗：" + result.message);
+                if(result.status === "success") { allVolunteerRecords = result.data; renderMonthlyRecords(); } 
+                else alert("載入失敗：" + result.message);
             });
         }
 
         function switchRecordTab(tab) {
-            const btnMonthly = document.getElementById('tabMonthly');
-            const btnYearly = document.getElementById('tabYearly');
-            const viewMonthly = document.getElementById('viewMonthly');
-            const viewYearly = document.getElementById('viewYearly');
+            const btnMonthly = document.getElementById('tabMonthly'); const btnYearly = document.getElementById('tabYearly');
+            const viewMonthly = document.getElementById('viewMonthly'); const viewYearly = document.getElementById('viewYearly');
             if (tab === 'monthly') {
                 btnMonthly.style.background = 'var(--primary-color)'; btnMonthly.style.color = 'white'; btnMonthly.style.border = 'none';
                 btnYearly.style.background = 'white'; btnYearly.style.color = 'var(--text-color)'; btnYearly.style.border = '1px solid #ccc';
-                viewMonthly.style.display = 'block'; viewYearly.style.display = 'none';
-                renderMonthlyRecords();
+                viewMonthly.style.display = 'block'; viewYearly.style.display = 'none'; renderMonthlyRecords();
             } else {
                 btnYearly.style.background = 'var(--text-color)'; btnYearly.style.color = 'white'; btnYearly.style.border = 'none';
                 btnMonthly.style.background = 'white'; btnMonthly.style.color = 'var(--text-color)'; btnMonthly.style.border = '1px solid #ccc';
-                viewYearly.style.display = 'block'; viewMonthly.style.display = 'none';
-                renderYearlyRecords();
+                viewYearly.style.display = 'block'; viewMonthly.style.display = 'none'; renderYearlyRecords();
             }
         }
 
         function renderMonthlyRecords() {
             const selectedMonth = document.getElementById('monthSelector').value;
-            const container = document.getElementById('monthlyListContainer');
-            container.innerHTML = "";
-            let totalHours = 0;
-            let typeHours = {};
-
+            const container = document.getElementById('monthlyListContainer'); container.innerHTML = "";
+            let totalHours = 0; let typeHours = {};
             const filteredRecords = allVolunteerRecords.filter(r => r.yearMonth === selectedMonth);
-            if (filteredRecords.length === 0) {
-                container.innerHTML = `<div style="text-align:center; color:gray; padding: 20px; background:white; border-radius:12px;">這個月還沒有已審核的執勤紀錄喔！</div>`;
-            } else {
+            if (filteredRecords.length === 0) container.innerHTML = `<div style="text-align:center; color:gray; padding: 20px; background:white; border-radius:12px;">這個月還沒有已審核的執勤紀錄喔！</div>`;
+            else {
                 filteredRecords.forEach(r => {
-                    totalHours += r.finalHours;
-                    typeHours[r.serviceType] = (typeHours[r.serviceType] || 0) + r.finalHours;
-                    const multiplierText = r.multiplier > 1 ? `<span style="color:#d97706; font-size:12px; font-weight:bold; background:#fef3c7; padding:2px 6px; border-radius:4px; margin-left:5px;">⭐ 加權 x${r.multiplier}</span>` : "";
-                    const remarkHtml = r.remark ? `<div style="font-size:13px; color:#888; margin-top:5px; border-top:1px dashed #eee; padding-top:5px;">📝 備註：${r.remark}</div>` : "";
-                    const hoursDisplay = `<span style="font-size:13px; color:#888; font-weight:normal; margin-right:5px;">(原始 ${r.rawHours.toFixed(1)})</span>${r.finalHours.toFixed(1)} <span style="font-size:12px;">hr</span>`;
-                    container.innerHTML += `
-                        <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 12px; border-left: 4px solid var(--primary-color);">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                                <div style="font-weight:bold; font-size:16px;">📅 ${formatDateWithDay(r.date)}</div>
-                                <div style="font-weight:bold; color:var(--primary-color); font-size:16px;">${hoursDisplay}</div>
-                            </div>
-                            <div style="font-size:14px; color:#555; margin-bottom:5px;">⏱️ ${r.startTime} ~ ${r.endTime}</div>
-                            <div style="font-size:14px; color:#555;">📍 服務：${r.serviceType} ${multiplierText}</div>
-                            ${remarkHtml}
-                        </div>
-                    `;
+                    totalHours += r.finalHours; typeHours[r.serviceType] = (typeHours[r.serviceType] || 0) + r.finalHours;
+                    container.innerHTML += generateRecordCardHtml(r, false);
                 });
             }
             let breakdownStr = Object.keys(typeHours).map(k => `${k}: ${typeHours[k].toFixed(1)}`).join(' | ');
@@ -760,31 +633,27 @@
 
         function renderYearlyRecords() {
             const selectedYear = document.getElementById('yearSelector').value;
-            const container = document.getElementById('yearlyListContainer');
-            container.innerHTML = "";
-            let yearTotal = 0;
-            const monthlySums = {};
-
-            allVolunteerRecords.forEach(r => {
-                if (r.year === selectedYear) {
-                    yearTotal += r.finalHours;
-                    if (!monthlySums[r.yearMonth]) monthlySums[r.yearMonth] = 0;
-                    monthlySums[r.yearMonth] += r.finalHours;
-                }
+            const container = document.getElementById('yearlyListContainer'); container.innerHTML = "";
+            let yearTotal = 0; const monthlySums = {};
+            const filteredRecords = allVolunteerRecords.filter(r => r.year === selectedYear);
+            
+            filteredRecords.forEach(r => {
+                yearTotal += r.finalHours;
+                if (!monthlySums[r.yearMonth]) monthlySums[r.yearMonth] = 0;
+                monthlySums[r.yearMonth] += r.finalHours;
             });
-            if (Object.keys(monthlySums).length === 0) {
-                container.innerHTML = `<div style="text-align:center; color:gray; padding: 20px; background:white; border-radius:12px;">該年度尚未有執勤紀錄。</div>`;
-            } else {
+
+            if (Object.keys(monthlySums).length === 0) container.innerHTML = `<div style="text-align:center; color:gray; padding: 20px; background:white; border-radius:12px;">該年度尚未有執勤紀錄。</div>`;
+            else {
                 const sortedMonths = Object.keys(monthlySums).sort().reverse();
                 sortedMonths.forEach(ym => {
                     const [, month] = ym.split('-');
-                    container.innerHTML += `
-                        <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 10px; display:flex; justify-content:space-between; align-items:center; border-left: 4px solid #d97706;">
-                            <div style="font-weight:bold; font-size:16px;">📅 ${month} 月份結算</div>
-                            <div style="font-weight:bold; color:#d97706; font-size:18px;">${monthlySums[ym].toFixed(1)} <span style="font-size:13px;">hr</span></div>
-                        </div>
-                    `;
+                    container.innerHTML += `<div style="background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 10px; display:flex; justify-content:space-between; align-items:center; border-left: 4px solid #d97706;"><div style="font-weight:bold; font-size:16px;">📅 ${month} 月份結算</div><div style="font-weight:bold; color:#d97706; font-size:18px;">${monthlySums[ym].toFixed(1)} <span style="font-size:13px;">hr</span></div></div>`;
                 });
+                
+                // 📍 附加所有年度明細列表
+                container.innerHTML += `<div style="margin-top:20px; font-weight:bold; color:var(--primary-color); border-bottom:2px solid var(--primary-color); padding-bottom:5px; margin-bottom:10px;">年度明細列表</div>`;
+                filteredRecords.forEach(r => { container.innerHTML += generateRecordCardHtml(r, false); });
             }
             document.getElementById('yearlyTotalHours').innerText = yearTotal.toFixed(1);
         }
@@ -792,25 +661,17 @@
         // ==========================================
         // 館員全體差勤查詢與報表匯出邏輯
         // ==========================================
-        let allAdminQueryRecords = [];
-        let globalRoster = []; 
-        let currentAdminQueryTab = 'monthly';
+        let allAdminQueryRecords = []; let globalRoster = []; let currentAdminQueryTab = 'monthly';
         function openAdminQueryUI(from = 'admin') {
             switchSection(document.getElementById('sectionAdminQuery'));
             const backBtn = document.getElementById('adminQueryBackBtn');
             if (from === 'volunteer') backBtn.onclick = () => switchSection(document.getElementById('sectionCheckIn'));
             else backBtn.onclick = () => switchSection(document.getElementById('sectionAdmin'));
 
-            const now = new Date();
-            const currentMonth = now.toISOString().slice(0, 7); 
-            const currentYear = currentMonth.slice(0, 4);
-            
+            const now = new Date(); const currentMonth = now.toISOString().slice(0, 7); const currentYear = currentMonth.slice(0, 4);
             document.getElementById('adminMonthSelector').value = currentMonth;
-            const yearSelect = document.getElementById('adminYearSelector');
-            yearSelect.innerHTML = "";
-            for (let y = parseInt(currentYear); y >= parseInt(currentYear) - 2; y--) {
-                yearSelect.innerHTML += `<option value="${y}">${y} 年</option>`;
-            }
+            const yearSelect = document.getElementById('adminYearSelector'); yearSelect.innerHTML = "";
+            for (let y = parseInt(currentYear); y >= parseInt(currentYear) - 2; y--) yearSelect.innerHTML += `<option value="${y}">${y} 年</option>`;
 
             document.getElementById('adminQueryListContainer').innerHTML = '<p style="text-align:center; color:gray;">正在從雲端載入資料 ⏳...</p>';
             fetch(GAS_URL, {
@@ -818,34 +679,35 @@
                 body: JSON.stringify({ action: "getAllVolunteerRecords", userId: currentUserId })
             }).then(res => res.json()).then(result => {
                 if(result.status === "success") {
-                    allAdminQueryRecords = result.data;
-                    globalRoster = result.roster; 
+                    allAdminQueryRecords = result.data; globalRoster = result.roster; 
+                    
+                    // 📍 拆分複數組別
+                    let groupSet = new Set();
+                    globalRoster.forEach(v => {
+                        if(v.group) { v.group.split(/[、,，]/).forEach(g => { const trimmed = g.trim(); if(trimmed) groupSet.add(trimmed); }); }
+                    });
+                    const uniqueGroups = [...groupSet].sort();
+                    
                     const groupSelect = document.getElementById('adminGroupSelector');
-                    const uniqueGroups = [...new Set(globalRoster.map(v => v.group))];
                     groupSelect.innerHTML = uniqueGroups.length > 1 ? '<option value="ALL">-- 所有組別 --</option>' : '';
                     uniqueGroups.forEach(g => { groupSelect.innerHTML += `<option value="${g}">${g}</option>`; });
-                    updateVolSelector();
-                    renderAdminQuery();
+                    updateVolSelector(); renderAdminQuery();
                 } else alert("載入失敗：" + result.message);
             }).catch(err => alert("載入失敗，請確認已部署新版本！\n" + err.message));
         }
 
         function switchAdminQueryTab(tab) {
             currentAdminQueryTab = tab;
-            const btnMonthly = document.getElementById('adminTabMonthly');
-            const btnYearly = document.getElementById('adminTabYearly');
-            
+            const btnMonthly = document.getElementById('adminTabMonthly'); const btnYearly = document.getElementById('adminTabYearly');
             if (tab === 'monthly') {
                 btnMonthly.style.background = 'var(--primary-color)'; btnMonthly.style.color = 'white'; btnMonthly.style.border = 'none';
                 btnYearly.style.background = 'white'; btnYearly.style.color = 'var(--text-color)'; btnYearly.style.border = '1px solid #ccc';
-                document.getElementById('adminMonthSelectWrapper').style.display = 'block';
-                document.getElementById('adminYearSelectWrapper').style.display = 'none';
+                document.getElementById('adminMonthSelectWrapper').style.display = 'block'; document.getElementById('adminYearSelectWrapper').style.display = 'none';
                 document.getElementById('exportSummaryBtn').style.display = 'none'; 
             } else {
                 btnYearly.style.background = 'var(--text-color)'; btnYearly.style.color = 'white'; btnYearly.style.border = 'none';
                 btnMonthly.style.background = 'white'; btnMonthly.style.color = 'var(--text-color)'; btnMonthly.style.border = '1px solid #ccc';
-                document.getElementById('adminYearSelectWrapper').style.display = 'block';
-                document.getElementById('adminMonthSelectWrapper').style.display = 'none';
+                document.getElementById('adminYearSelectWrapper').style.display = 'block'; document.getElementById('adminMonthSelectWrapper').style.display = 'none';
                 document.getElementById('exportSummaryBtn').style.display = 'block'; 
             }
             renderAdminQuery();
@@ -857,7 +719,8 @@
             const volSelect = document.getElementById('adminVolSelector');
             
             let filteredRoster = globalRoster;
-            if (selectedGroup !== "ALL") filteredRoster = filteredRoster.filter(v => v.group === selectedGroup);
+            // 📍 比對包含字串即可，以支援被拆分的複數組別
+            if (selectedGroup !== "ALL") filteredRoster = filteredRoster.filter(v => v.group && v.group.includes(selectedGroup));
             if (keyword !== "") {
                 filteredRoster = filteredRoster.filter(v => {
                     const searchStr = `${v.name} ${v.group} ${v.title} ${v.phone} ${v.email} ${v.lineName}`.toLowerCase();
@@ -865,9 +728,7 @@
                 });
             }
 
-            const nameCounts = {};
-            globalRoster.forEach(vol => { nameCounts[vol.name] = (nameCounts[vol.name] || 0) + 1; });
-
+            const nameCounts = {}; globalRoster.forEach(vol => { nameCounts[vol.name] = (nameCounts[vol.name] || 0) + 1; });
             volSelect.innerHTML = '<option value="ALL">-- 所有名單 --</option>';
             filteredRoster.forEach(vol => {
                 const val = vol.lineId || `unbound_${Math.random()}`;
@@ -881,10 +742,8 @@
         }
 
         function renderAdminQuery() {
-            const container = document.getElementById('adminQueryListContainer');
-            container.innerHTML = "";
-            let totalHours = 0;
-            let typeHoursGlobal = {};
+            const container = document.getElementById('adminQueryListContainer'); container.innerHTML = "";
+            let totalHours = 0; let typeHoursGlobal = {};
 
             const selectedGroup = document.getElementById('adminGroupSelector').value;
             const selectedVolId = document.getElementById('adminVolSelector').value;
@@ -892,20 +751,15 @@
             const selectedMonth = document.getElementById('adminMonthSelector').value;
             const selectedYear = document.getElementById('adminYearSelector').value;
 
-            let filtered = allAdminQueryRecords;
-            let validRoster = globalRoster;
-            
-            if (selectedGroup !== "ALL") validRoster = validRoster.filter(v => v.group === selectedGroup);
+            let filtered = allAdminQueryRecords; let validRoster = globalRoster;
+            if (selectedGroup !== "ALL") validRoster = validRoster.filter(v => v.group && v.group.includes(selectedGroup));
             if (keyword !== "") {
                 validRoster = validRoster.filter(v => {
-                    const searchStr = `${v.name} ${v.group} ${v.title} ${v.phone} ${v.email} ${v.lineName}`.toLowerCase();
-                    return searchStr.includes(keyword);
+                    const searchStr = `${v.name} ${v.group} ${v.title} ${v.phone} ${v.email} ${v.lineName}`.toLowerCase(); return searchStr.includes(keyword);
                 });
             }
             const validUserIds = validRoster.map(v => v.lineId);
-            if (selectedVolId === "ALL" && (selectedGroup !== "ALL" || keyword !== "")) {
-                filtered = filtered.filter(r => validUserIds.includes(r.userId));
-            }
+            if (selectedVolId === "ALL" && (selectedGroup !== "ALL" || keyword !== "")) filtered = filtered.filter(r => validUserIds.includes(r.userId));
             if (selectedVolId !== "ALL") filtered = filtered.filter(r => r.userId === selectedVolId);
 
             if (currentAdminQueryTab === 'monthly') {
@@ -913,48 +767,17 @@
                 if (filtered.length === 0) container.innerHTML = `<div style="text-align:center; color:gray; padding: 20px;">無符合條件的紀錄。</div>`;
                 else {
                     filtered.forEach(r => {
-                        totalHours += r.finalHours;
-                        typeHoursGlobal[r.serviceType] = (typeHoursGlobal[r.serviceType] || 0) + r.finalHours;
-
-                        const multiplierText = r.multiplier > 1 ? `<span style="color:#d97706; font-size:12px; font-weight:bold; background:#fef3c7; padding:2px 6px; border-radius:4px;">⭐ x${r.multiplier}</span>` : "";
-                        const remarkHtml = r.remark ? `<div style="font-size:13px; color:#888; margin-top:5px; border-top:1px dashed #eee; padding-top:5px;">📝 備註：${r.remark}</div>` : "";
-                        const hoursDisplay = `<span style="font-size:13px; color:#888; font-weight:normal; margin-bottom:3px; display:block;">(原始 ${r.rawHours.toFixed(1)})</span>${r.finalHours.toFixed(1)} <span style="font-size:12px;">hr</span>`;
-
-                        const volInfo = globalRoster.find(v => v.lineId === r.userId);
-                        const lineNameDisplay = (volInfo && volInfo.lineName) ? `📱 LINE: ${volInfo.lineName} &nbsp;&nbsp;|&nbsp;&nbsp; ` : "";
-                        container.innerHTML += `
-                            <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 12px; border-left: 4px solid var(--primary-color);">
-                                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; border-bottom: 1px dashed #eee; padding-bottom: 8px;">
-                                    <div>
-                                        <div style="font-weight:bold; font-size:16px; margin-bottom:5px;">👤 ${r.volunteerName}</div>
-                                        <div style="font-size:12px; color:#666;">${lineNameDisplay}📅 ${formatDateWithDay(r.date)}</div>
-                                    </div>
-                                    <div style="font-weight:bold; color:var(--primary-color); font-size:16px; text-align:right; line-height: 1.2;">
-                                        ${hoursDisplay}
-                                    </div>
-                                </div>
-                                <div style="font-size:13px; color:#555; margin-bottom:5px;">⏱️ ${r.startTime} ~ ${r.endTime} &nbsp; 📍 ${r.serviceType} ${multiplierText}</div>
-                                <div style="font-size:12px; color:#00897b; font-weight:bold; background:#e0f2f1; display:inline-block; padding:3px 8px; border-radius:10px;">✅ 確認館員：${r.staffName}</div>
-                                ${remarkHtml}
-                            </div>
-                        `;
+                        totalHours += r.finalHours; typeHoursGlobal[r.serviceType] = (typeHoursGlobal[r.serviceType] || 0) + r.finalHours;
+                        container.innerHTML += generateRecordCardHtml(r, true);
                     });
                 }
             } else {
                 filtered = filtered.filter(r => r.year === selectedYear);
-                const monthlySums = {}; 
-                const monthlyTypes = {}; 
-
+                const monthlySums = {}; const monthlyTypes = {}; 
                 filtered.forEach(r => {
-                    totalHours += r.finalHours;
-                    typeHoursGlobal[r.serviceType] = (typeHoursGlobal[r.serviceType] || 0) + r.finalHours;
-
-                    if (!monthlySums[r.yearMonth]) {
-                        monthlySums[r.yearMonth] = 0;
-                        monthlyTypes[r.yearMonth] = {};
-                    }
-                    monthlySums[r.yearMonth] += r.finalHours;
-                    monthlyTypes[r.yearMonth][r.serviceType] = (monthlyTypes[r.yearMonth][r.serviceType] || 0) + r.finalHours;
+                    totalHours += r.finalHours; typeHoursGlobal[r.serviceType] = (typeHoursGlobal[r.serviceType] || 0) + r.finalHours;
+                    if (!monthlySums[r.yearMonth]) { monthlySums[r.yearMonth] = 0; monthlyTypes[r.yearMonth] = {}; }
+                    monthlySums[r.yearMonth] += r.finalHours; monthlyTypes[r.yearMonth][r.serviceType] = (monthlyTypes[r.yearMonth][r.serviceType] || 0) + r.finalHours;
                 });
 
                 if (Object.keys(monthlySums).length === 0) container.innerHTML = `<div style="text-align:center; color:gray; padding: 20px;">該年度無紀錄。</div>`;
@@ -964,30 +787,19 @@
                     const selectedGroupText = document.getElementById('adminGroupSelector').options[document.getElementById('adminGroupSelector').selectedIndex].text;
 
                     sortedMonths.forEach(ym => {
-                        const [, month] = ym.split('-');
-                        let titleText = "";
-                        
+                        const [, month] = ym.split('-'); let titleText = "";
                         if (selectedVolId !== "ALL") titleText = `👤 ${selectedNameText} ${month} 月份總計`;
                         else {
-                            if (selectedGroup !== "ALL") titleText = `👥 ${selectedGroupText} ${month} 月份總計`;
-                            else titleText = `全館 ${month} 月份總計`;
+                            if (selectedGroup !== "ALL") titleText = `👥 ${selectedGroupText} ${month} 月份總計`; else titleText = `全館 ${month} 月份總計`;
                             if (keyword !== "") titleText += ` (含關鍵字搜尋)`;
                         }
-
                         let monthBreakdown = Object.keys(monthlyTypes[ym]).map(k => `${k}:${monthlyTypes[ym][k].toFixed(1)}`).join(', ');
-
-                        container.innerHTML += `
-                            <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 10px; border-left: 4px solid #d97706;">
-                                <div style="display:flex; justify-content:space-between; align-items:center;">
-                                    <div style="font-weight:bold; font-size:15px;">📅 ${titleText}</div>
-                                    <div style="font-weight:bold; color:#d97706; font-size:18px;">${monthlySums[ym].toFixed(1)} <span style="font-size:13px;">hr</span></div>
-                                </div>
-                                <div style="font-size:13px; color:#777; margin-top:5px; padding-top:5px; border-top:1px dashed #eee;">
-                                    📊 明細：${monthBreakdown}
-                                </div>
-                            </div>
-                        `;
+                        container.innerHTML += `<div style="background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 10px; border-left: 4px solid #d97706;"><div style="display:flex; justify-content:space-between; align-items:center;"><div style="font-weight:bold; font-size:15px;">📅 ${titleText}</div><div style="font-weight:bold; color:#d97706; font-size:18px;">${monthlySums[ym].toFixed(1)} <span style="font-size:13px;">hr</span></div></div><div style="font-size:13px; color:#777; margin-top:5px; padding-top:5px; border-top:1px dashed #eee;">📊 明細：${monthBreakdown}</div></div>`;
                     });
+
+                    // 📍 附加所有年度明細列表
+                    container.innerHTML += `<div style="margin-top:20px; font-weight:bold; color:var(--primary-color); border-bottom:2px solid var(--primary-color); padding-bottom:5px; margin-bottom:10px;">年度明細列表</div>`;
+                    filtered.forEach(r => { container.innerHTML += generateRecordCardHtml(r, true); });
                 }
             }
             
@@ -998,113 +810,76 @@
 
         function exportAdminQueryCSV() {
             if (allAdminQueryRecords.length === 0) { alert("目前沒有資料可以匯出！"); return; }
-            
             const selectedGroup = document.getElementById('adminGroupSelector').value;
             const selectedVolId = document.getElementById('adminVolSelector').value;
             const keyword = document.getElementById('adminSearchInput').value.trim().toLowerCase();
             const selectedMonth = document.getElementById('adminMonthSelector').value;
             const selectedYear = document.getElementById('adminYearSelector').value;
             
-            let filtered = allAdminQueryRecords;
-            let validRoster = globalRoster;
-            if (selectedGroup !== "ALL") validRoster = validRoster.filter(v => v.group === selectedGroup);
+            let filtered = allAdminQueryRecords; let validRoster = globalRoster;
+            if (selectedGroup !== "ALL") validRoster = validRoster.filter(v => v.group && v.group.includes(selectedGroup));
             if (keyword !== "") {
-                validRoster = validRoster.filter(v => {
-                    const searchStr = `${v.name} ${v.group} ${v.title} ${v.phone} ${v.email} ${v.lineName}`.toLowerCase();
-                    return searchStr.includes(keyword);
-                });
+                validRoster = validRoster.filter(v => { const searchStr = `${v.name} ${v.group} ${v.title} ${v.phone} ${v.email} ${v.lineName}`.toLowerCase(); return searchStr.includes(keyword); });
             }
             const validUserIds = validRoster.map(v => v.lineId);
-            if (selectedVolId === "ALL" && (selectedGroup !== "ALL" || keyword !== "")) {
-                filtered = filtered.filter(r => validUserIds.includes(r.userId));
-            }
+            if (selectedVolId === "ALL" && (selectedGroup !== "ALL" || keyword !== "")) filtered = filtered.filter(r => validUserIds.includes(r.userId));
             if (selectedVolId !== "ALL") filtered = filtered.filter(r => r.userId === selectedVolId);
             if (currentAdminQueryTab === 'monthly') filtered = filtered.filter(r => r.yearMonth === selectedMonth);
             else filtered = filtered.filter(r => r.year === selectedYear);
             if (filtered.length === 0) { alert("這個範圍內沒有資料可匯出！"); return; }
 
-            let csvContent = "\uFEFF";
-            csvContent += "志工姓名,日期,簽到,簽退,服務內容,原始時數,加權,加時,結算時數,確認館員,備註\n";
-            
+            let csvContent = "\uFEFF"; csvContent += "志工姓名,日期,簽到,簽退,服務內容,原始時數,加權,加時,結算時數,確認館員,備註\n";
             filtered.forEach(r => {
                 const safeRemark = r.remark ? r.remark.replace(/"/g, '""') : "";
                 const row = [ r.volunteerName, r.date, r.startTime, r.endTime, r.serviceType, r.rawHours.toFixed(1), r.multiplier, r.extraHours.toFixed(1), r.finalHours.toFixed(1), r.staffName, `"${safeRemark}"` ];
                 csvContent += row.join(",") + "\n";
             });
 
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const link = document.createElement("a");
             let prefix = selectedVolId !== "ALL" ? document.getElementById('adminVolSelector').options[document.getElementById('adminVolSelector').selectedIndex].text.split(" ")[0] : (selectedGroup !== "ALL" ? selectedGroup : "全館");
             if (keyword !== "" && selectedVolId === "ALL") prefix += "_搜尋結果";
             
             const fileName = currentAdminQueryTab === 'monthly' ? `${prefix}_${selectedMonth}_差勤明細.csv` : `${prefix}_${selectedYear}_年度差勤明細.csv`;
-            link.setAttribute("href", url);
-            link.setAttribute("download", fileName);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            link.setAttribute("href", url); link.setAttribute("download", fileName); document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
         function exportYearlySummaryCSV() {
             if (globalRoster.length === 0) { alert("無法取得志工名冊資料！"); return; }
-            
             const selectedGroup = document.getElementById('adminGroupSelector').value;
             const keyword = document.getElementById('adminSearchInput').value.trim().toLowerCase();
             const selectedYear = document.getElementById('adminYearSelector').value;
-            
             const yearRecords = allAdminQueryRecords.filter(r => r.year === selectedYear);
             const serviceTypes = [...new Set(yearRecords.map(r => r.serviceType))];
             
-            let csvContent = "\uFEFF";
-            csvContent += `組別,志工姓名,1月,2月,3月,4月,5月,6月,7月,8月,9月,10月,11月,12月,年度總計,${serviceTypes.map(t => t + "總計").join(",")}\n`;
-            const nameCounts = {};
-            globalRoster.forEach(vol => { nameCounts[vol.name] = (nameCounts[vol.name] || 0) + 1; });
+            let csvContent = "\uFEFF"; csvContent += `組別,志工姓名,1月,2月,3月,4月,5月,6月,7月,8月,9月,10月,11月,12月,年度總計,${serviceTypes.map(t => t + "總計").join(",")}\n`;
+            const nameCounts = {}; globalRoster.forEach(vol => { nameCounts[vol.name] = (nameCounts[vol.name] || 0) + 1; });
 
             let targetRoster = globalRoster;
-            if (selectedGroup !== "ALL") targetRoster = targetRoster.filter(v => v.group === selectedGroup);
+            if (selectedGroup !== "ALL") targetRoster = targetRoster.filter(v => v.group && v.group.includes(selectedGroup));
             if (keyword !== "") {
-                targetRoster = targetRoster.filter(v => {
-                    const searchStr = `${v.name} ${v.group} ${v.title} ${v.phone} ${v.email} ${v.lineName}`.toLowerCase();
-                    return searchStr.includes(keyword);
-                });
+                targetRoster = targetRoster.filter(v => { const searchStr = `${v.name} ${v.group} ${v.title} ${v.phone} ${v.email} ${v.lineName}`.toLowerCase(); return searchStr.includes(keyword); });
             }
 
             targetRoster.forEach(vol => {
-                let monthlyHours = Array(12).fill(0);
-                let yearlyTotal = 0;
-                let typeTotals = {}; 
+                let monthlyHours = Array(12).fill(0); let yearlyTotal = 0; let typeTotals = {}; 
                 serviceTypes.forEach(t => typeTotals[t] = 0); 
 
                 if (vol.lineId) {
                     const volRecords = yearRecords.filter(r => r.userId === vol.lineId);
                     volRecords.forEach(r => {
                         const monthIndex = parseInt(r.yearMonth.split('-')[1], 10) - 1; 
-                        monthlyHours[monthIndex] += r.finalHours;
-                        yearlyTotal += r.finalHours;
-                        typeTotals[r.serviceType] += r.finalHours; 
+                        monthlyHours[monthIndex] += r.finalHours; yearlyTotal += r.finalHours; typeTotals[r.serviceType] += r.finalHours; 
                     });
                 }
-
-                let displayName = vol.name;
-                if (nameCounts[vol.name] > 1 && vol.phoneTail !== "無") displayName += `(尾數${vol.phoneTail})`;
-
+                let displayName = vol.name; if (nameCounts[vol.name] > 1 && vol.phoneTail !== "無") displayName += `(尾數${vol.phoneTail})`;
                 const typeValues = serviceTypes.map(t => typeTotals[t].toFixed(1));
                 const row = [vol.group, displayName, ...monthlyHours.map(h => h.toFixed(1)), yearlyTotal.toFixed(1), ...typeValues];
                 csvContent += row.join(",") + "\n";
             });
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            let prefix = selectedGroup !== "ALL" ? selectedGroup : "全館";
-            if (keyword !== "") prefix += "_搜尋結果";
-            
-            link.setAttribute("href", url);
-            link.setAttribute("download", `${prefix}_${selectedYear}_年度時數總表.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const link = document.createElement("a");
+            let prefix = selectedGroup !== "ALL" ? selectedGroup : "全館"; if (keyword !== "") prefix += "_搜尋結果";
+            link.setAttribute("href", url); link.setAttribute("download", `${prefix}_${selectedYear}_年度時數總表.csv`);
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
         // ==========================================
@@ -1113,43 +888,23 @@
         let manualRoster = [];
         function openManualEntryUI() {
             switchSection(document.getElementById('sectionManualEntry'));
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
+            const today = new Date(); const yyyy = today.getFullYear(); const mm = String(today.getMonth() + 1).padStart(2, '0'); const dd = String(today.getDate()).padStart(2, '0');
             document.getElementById('manualDate').value = `${yyyy}-${mm}-${dd}`;
-            const getOptions = (max) => {
-                let opts = '';
-                for(let i=0; i<=max; i++) {
-                    let val = i.toString().padStart(2, '0');
-                    opts += `<option value="${val}">${val}</option>`;
-                }
-                return opts;
-            };
-            document.getElementById('manualHour').innerHTML = getOptions(23);
-            document.getElementById('manualMin').innerHTML = getOptions(59);
-            
-            document.querySelector('input[name="manualCheckType"][value="簽到"]').checked = true;
-            toggleManualInputs();
+            const getOptions = (max) => { let opts = ''; for(let i=0; i<=max; i++) { let val = i.toString().padStart(2, '0'); opts += `<option value="${val}">${val}</option>`; } return opts; };
+            document.getElementById('manualHour').innerHTML = getOptions(23); document.getElementById('manualMin').innerHTML = getOptions(59);
+            document.querySelector('input[name="manualCheckType"][value="簽到"]').checked = true; toggleManualInputs();
 
             document.getElementById('manualVolSelector').innerHTML = '<option value="">名單載入中 ⏳...</option>';
-            fetch(GAS_URL, {
-                method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({ action: "getRoster", userId: currentUserId })
+            fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "getRoster", userId: currentUserId })
             }).then(res => res.json()).then(result => {
-                if(result.status === "success") {
-                    manualRoster = result.roster;
-                    filterManualVolunteers(); 
-                } else alert("權限不足或載入失敗：" + result.message);
+                if(result.status === "success") { manualRoster = result.roster; filterManualVolunteers(); } 
+                else alert("權限不足或載入失敗：" + result.message);
             }).catch(err => alert("載入失敗：" + err.message));
         }
 
         function toggleManualInputs() {
             const checkType = document.querySelector('input[name="manualCheckType"]:checked').value;
-            const serviceSelect = document.getElementById('manualService');
-            const multiplierInput = document.getElementById('manualMultiplier');
-            const extraHoursInput = document.getElementById('manualExtraHours');
-
+            const serviceSelect = document.getElementById('manualService'); const multiplierInput = document.getElementById('manualMultiplier'); const extraHoursInput = document.getElementById('manualExtraHours');
             if (checkType === "簽退") {
                 serviceSelect.disabled = true; serviceSelect.style.backgroundColor = "#f5f5f5";
                 multiplierInput.disabled = true; multiplierInput.value = 1; multiplierInput.style.backgroundColor = "#f5f5f5";
@@ -1164,124 +919,66 @@
         function filterManualVolunteers() {
             const keyword = document.getElementById('manualSearchInput').value.trim().toLowerCase();
             const volSelect = document.getElementById('manualVolSelector');
-
             let filtered = manualRoster;
-            if (keyword !== "") {
-                filtered = filtered.filter(v => v.name.toLowerCase().includes(keyword) || v.group.toLowerCase().includes(keyword));
-            }
-
-            const nameCounts = {};
-            manualRoster.forEach(vol => { nameCounts[vol.name] = (nameCounts[vol.name] || 0) + 1; });
-
+            if (keyword !== "") filtered = filtered.filter(v => v.name.toLowerCase().includes(keyword) || v.group.toLowerCase().includes(keyword));
+            const nameCounts = {}; manualRoster.forEach(vol => { nameCounts[vol.name] = (nameCounts[vol.name] || 0) + 1; });
             volSelect.innerHTML = '<option value="">-- 請選擇要補登的志工 --</option>';
             filtered.forEach(vol => {
-                let displayName = vol.name;
-                if (vol.lineName) displayName += ` [LINE: ${vol.lineName}]`;
-                if (nameCounts[vol.name] > 1 && vol.phoneTail !== "無") displayName += ` (尾數${vol.phoneTail})`;
-                displayName += ` - ${vol.group}`; 
+                let displayName = vol.name; if (vol.lineName) displayName += ` [LINE: ${vol.lineName}]`;
+                if (nameCounts[vol.name] > 1 && vol.phoneTail !== "無") displayName += ` (尾數${vol.phoneTail})`; displayName += ` - ${vol.group}`; 
                 volSelect.innerHTML += `<option value="${vol.lineId}" data-name="${vol.name}">${displayName}</option>`;
             });
         }
 
         function submitManualEntry() {
-            const volSelect = document.getElementById('manualVolSelector');
-            const targetUserId = volSelect.value;
+            const volSelect = document.getElementById('manualVolSelector'); const targetUserId = volSelect.value;
             if (!targetUserId) { alert("⚠️ 請先選擇要補登的志工！"); return; }
-            
             const volunteerName = volSelect.options[volSelect.selectedIndex].getAttribute('data-name');
-            const dateStr = document.getElementById('manualDate').value;
-            const hour = document.getElementById('manualHour').value;
-            const min = document.getElementById('manualMin').value;
+            const dateStr = document.getElementById('manualDate').value; const hour = document.getElementById('manualHour').value; const min = document.getElementById('manualMin').value;
             if (!dateStr) { alert("⚠️ 請選擇補登日期！"); return; }
             
-            const dateTimeStr = `${dateStr}T${hour}:${min}`;
-            const serviceType = document.getElementById('manualService').value;
+            const dateTimeStr = `${dateStr}T${hour}:${min}`; const serviceType = document.getElementById('manualService').value;
             const checkType = document.querySelector('input[name="manualCheckType"]:checked').value;
-            const multiplier = document.getElementById('manualMultiplier').value;
-            const extraHours = document.getElementById('manualExtraHours').value;
+            const multiplier = document.getElementById('manualMultiplier').value; const extraHours = document.getElementById('manualExtraHours').value;
             const remark = document.getElementById('manualRemark').value;
 
-            const btn = event.target;
-            btn.disabled = true; btn.innerText = "資料驗證中 ⏳...";
-
+            const btn = event.target; btn.disabled = true; btn.innerText = "資料驗證中 ⏳...";
             fetch(GAS_URL, {
                 method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({ 
-                    action: "manualEntry", userId: currentUserId, targetUserId: targetUserId, volunteerName: volunteerName,
-                    dateTimeStr: dateTimeStr, checkType: checkType, serviceType: serviceType, 
-                    multiplier: multiplier, extraHours: extraHours, remark: remark
-                })
+                body: JSON.stringify({ action: "manualEntry", userId: currentUserId, targetUserId: targetUserId, volunteerName: volunteerName, dateTimeStr: dateTimeStr, checkType: checkType, serviceType: serviceType, multiplier: multiplier, extraHours: extraHours, remark: remark })
             }).then(res => res.json()).then(result => {
-                if(result.status === "success") {
-                    alert("✅ " + result.message);
-                    switchSection(document.getElementById('sectionAdmin'));
-                    fetchPendingRecords(); 
-                } else {
-                    alert("❌ 補登失敗\n" + result.message); 
-                }
+                if(result.status === "success") { alert("✅ " + result.message); switchSection(document.getElementById('sectionAdmin')); fetchPendingRecords(); } 
+                else { alert("❌ 補登失敗\n" + result.message); }
                 btn.disabled = false; btn.innerText = "✅ 確認補登";
-            }).catch(err => {
-                alert("網路異常，補登失敗：" + err.message);
-                btn.disabled = false; btn.innerText = "✅ 確認補登";
-            });
+            }).catch(err => { alert("網路異常，補登失敗：" + err.message); btn.disabled = false; btn.innerText = "✅ 確認補登"; });
         }
 
-        // ==========================================
-        // 動態渲染「服務內容」與「文化時數開關」控制
-        // ==========================================
         function buildDynamicServiceOptions() {
-            const optionsHtml = `
-                <option value="活動支援">活動支援</option>
-                <option value="五感值班">五感值班</option>
-                <option value="創客值班">創客值班</option>
-                <option value="導覽">導覽</option>
-                ${isCulturalHoursEnabled ? '<option value="文化時數">文化時數</option>' : ''}
-            `;
+            const optionsHtml = `<option value="活動支援">活動支援</option><option value="五感值班">五感值班</option><option value="創客值班">創客值班</option><option value="導覽">導覽</option>${isCulturalHoursEnabled ? '<option value="文化時數">文化時數</option>' : ''}`;
             const serviceSelect = document.getElementById('serviceSelect');
             if (serviceSelect) {
-                const currentVal = serviceSelect.value;
-                serviceSelect.innerHTML = '<option value="" disabled selected>👉 請先選擇本次服務內容</option>' + optionsHtml;
+                const currentVal = serviceSelect.value; serviceSelect.innerHTML = '<option value="" disabled selected>👉 請先選擇本次服務內容</option>' + optionsHtml;
                 if (currentVal && serviceSelect.querySelector(`option[value="${currentVal}"]`)) serviceSelect.value = currentVal;
             }
-
             const manualSelect = document.getElementById('manualService');
             if (manualSelect) {
-                const currentManualVal = manualSelect.value;
-                manualSelect.innerHTML = optionsHtml;
+                const currentManualVal = manualSelect.value; manualSelect.innerHTML = optionsHtml;
                 if (manualSelect.querySelector(`option[value="${currentManualVal}"]`)) manualSelect.value = currentManualVal;
             }
-
             const btn = document.getElementById('btnToggleCultural');
             if (btn) {
-                if (isCulturalHoursEnabled) {
-                    btn.innerText = "🛑 關閉文化時數"; btn.style.background = "#ffebee"; btn.style.color = "#c62828";
-                } else {
-                    btn.innerText = "🎭 開放文化時數"; btn.style.background = "#f3e5f5"; btn.style.color = "#8e24aa";
-                }
+                if (isCulturalHoursEnabled) { btn.innerText = "🛑 關閉文化時數"; btn.style.background = "#ffebee"; btn.style.color = "#c62828"; } 
+                else { btn.innerText = "🎭 開放文化時數"; btn.style.background = "#f3e5f5"; btn.style.color = "#8e24aa"; }
             }
         }
 
         function toggleCulturalMode() {
-            const newState = !isCulturalHoursEnabled;
-            const btn = document.getElementById('btnToggleCultural');
-            btn.innerText = "處理中 ⏳...";
-            
-            fetch(GAS_URL, {
-                method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({ action: "toggleCulturalHours", userId: currentUserId, enable: newState })
+            const newState = !isCulturalHoursEnabled; const btn = document.getElementById('btnToggleCultural'); btn.innerText = "處理中 ⏳...";
+            fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "toggleCulturalHours", userId: currentUserId, enable: newState })
             }).then(res => res.json()).then(result => {
-                if(result.status === "success") {
-                    isCulturalHoursEnabled = result.newState;
-                    buildDynamicServiceOptions(); 
-                    alert(isCulturalHoursEnabled ? "✅ 已開放「文化時數」！全館志工現在可以看見此選項了。" : "🚫 已關閉「文化時數」！");
-                } else {
-                    alert("權限不足或操作失敗：" + result.message);
-                    buildDynamicServiceOptions(); 
-                }
-            }).catch(err => {
-                alert("網路異常：" + err.message);
-                buildDynamicServiceOptions();
-            });
+                if(result.status === "success") { isCulturalHoursEnabled = result.newState; buildDynamicServiceOptions(); alert(isCulturalHoursEnabled ? "✅ 已開放「文化時數」！" : "🚫 已關閉「文化時數」！"); } 
+                else { alert("權限不足或操作失敗：" + result.message); buildDynamicServiceOptions(); }
+            }).catch(err => { alert("網路異常：" + err.message); buildDynamicServiceOptions(); });
         }
 
         // ==========================================
@@ -1289,78 +986,51 @@
         // ==========================================
         let isBatchMode = false;
         function toggleBatchMode() {
-            isBatchMode = !isBatchMode;
-            const btn = document.getElementById('btnBatchMode');
-            const checkboxes = document.querySelectorAll('.batch-checkbox');
-            const individualBtns = document.querySelectorAll('.approve-btn');
-            const submitBatchBtn = document.getElementById('submitBatchBtn');
+            isBatchMode = !isBatchMode; const btn = document.getElementById('btnBatchMode');
+            const checkboxes = document.querySelectorAll('.batch-checkbox'); const individualBtns = document.querySelectorAll('.approve-btn'); const submitBatchBtn = document.getElementById('submitBatchBtn');
             if (isBatchMode) {
                 btn.innerText = "❌ 退出批次"; btn.style.background = "#ffebee"; btn.style.color = "#c62828";
-                checkboxes.forEach(cb => { cb.style.display = 'inline-block'; cb.checked = false; });
-                individualBtns.forEach(b => b.style.display = 'none'); 
-                submitBatchBtn.style.display = 'block';
-                updateBatchCount();
+                checkboxes.forEach(cb => { cb.style.display = 'inline-block'; cb.checked = false; }); individualBtns.forEach(b => b.style.display = 'none'); 
+                submitBatchBtn.style.display = 'block'; updateBatchCount();
             } else {
                 btn.innerText = "☑️ 批次審核"; btn.style.background = "#e3f2fd"; btn.style.color = "#1565c0";
-                checkboxes.forEach(cb => cb.style.display = 'none');
-                individualBtns.forEach(b => b.style.display = 'block');
-                submitBatchBtn.style.display = 'none';
+                checkboxes.forEach(cb => cb.style.display = 'none'); individualBtns.forEach(b => b.style.display = 'block'); submitBatchBtn.style.display = 'none';
             }
         }
 
         function toggleCardCheckbox(uuid, event) {
             if (!isBatchMode) return;
             if (event.target.tagName.toLowerCase() === 'input' || event.target.tagName.toLowerCase() === 'select') return; 
-            const cb = document.getElementById(`cb_${uuid}`);
-            if (cb) { cb.checked = !cb.checked; updateBatchCount(); }
+            const cb = document.getElementById(`cb_${uuid}`); if (cb) { cb.checked = !cb.checked; updateBatchCount(); }
         }
 
         function updateBatchCount() {
-            const count = document.querySelectorAll('.batch-checkbox:checked').length;
-            const btn = document.getElementById('submitBatchBtn');
+            const count = document.querySelectorAll('.batch-checkbox:checked').length; const btn = document.getElementById('submitBatchBtn');
             btn.innerText = `✅ 送出批次核准 (已選 ${count} 筆)`;
-            if(count > 0) { btn.style.background = "#00B900"; btn.disabled = false; } 
-            else { btn.style.background = "#ccc"; btn.disabled = true; }
+            if(count > 0) { btn.style.background = "#00B900"; btn.disabled = false; } else { btn.style.background = "#ccc"; btn.disabled = true; }
         }
 
         function submitBatchApprove() {
-            const checkboxes = document.querySelectorAll('.batch-checkbox:checked');
-            if (checkboxes.length === 0) return;
-
+            const checkboxes = document.querySelectorAll('.batch-checkbox:checked'); if (checkboxes.length === 0) return;
             const records = [];
             checkboxes.forEach(cb => {
-                const uuid = cb.value;
-                const hourSelect = document.getElementById(`hour_${uuid}`);
-                const minSelect = document.getElementById(`min_${uuid}`);
-                const datePart = hourSelect.getAttribute('data-date'); 
-                const newTime = `${datePart}T${hourSelect.value}:${minSelect.value}`;
+                const uuid = cb.value; const hourSelect = document.getElementById(`hour_${uuid}`); const minSelect = document.getElementById(`min_${uuid}`);
+                const datePart = hourSelect.getAttribute('data-date'); const newTime = `${datePart}T${hourSelect.value}:${minSelect.value}`;
                 
-                const serviceType = document.getElementById(`srv_${uuid}`).value;
-                const mulInput = document.getElementById(`mul_${uuid}`);
-                const multiplier = mulInput ? mulInput.value : 1; 
-                const extraHours = document.getElementById(`ext_${uuid}`).value;
+                const srvInput = document.getElementById(`srv_${uuid}`); const serviceType = srvInput ? srvInput.value : "";
+                const mulInput = document.getElementById(`mul_${uuid}`); const multiplier = mulInput ? mulInput.value : 1; 
+                const extInput = document.getElementById(`ext_${uuid}`); const extraHours = extInput ? extInput.value : 0;
                 const remark = document.getElementById(`rem_${uuid}`).value;
-
                 records.push({ uuid, newTime, serviceType, multiplier, extraHours, remark });
             });
-            const btn = document.getElementById('submitBatchBtn');
-            btn.disabled = true; btn.innerText = "批次處理中 ⏳...";
+            const btn = document.getElementById('submitBatchBtn'); btn.disabled = true; btn.innerText = "批次處理中 ⏳...";
             fetch(GAS_URL, {
                 method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify({ action: "batchApprove", userId: currentUserId, records: records, staffName: dbUserName })
             }).then(res => res.json()).then(result => {
-                if(result.status === "success") {
-                    alert(result.message);
-                    toggleBatchMode(); 
-                    fetchPendingRecords(); 
-                } else {
-                    alert("批次核准失敗：" + result.message);
-                    btn.disabled = false; btn.innerText = `✅ 送出批次核准 (已選 ${checkboxes.length} 筆)`;
-                }
-            }).catch(err => {
-                alert("網路異常：" + err.message);
-                btn.disabled = false; btn.innerText = `✅ 送出批次核准 (已選 ${checkboxes.length} 筆)`;
-            });
+                if(result.status === "success") { alert(result.message); toggleBatchMode(); fetchPendingRecords(); } 
+                else { alert("批次核准失敗：" + result.message); btn.disabled = false; btn.innerText = `✅ 送出批次核准 (已選 ${checkboxes.length} 筆)`; }
+            }).catch(err => { alert("網路異常：" + err.message); btn.disabled = false; btn.innerText = `✅ 送出批次核准 (已選 ${checkboxes.length} 筆)`; });
         }
         
     </script>
