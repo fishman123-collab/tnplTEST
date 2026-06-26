@@ -295,18 +295,26 @@
 function showSmartCheckInUI(titleText, shiftObj) {
     document.getElementById('smartCheckInArea').style.display = 'block';
     document.getElementById('manualCheckInArea').style.display = 'none';
-    document.getElementById('smartCheckInTitle').innerText = titleText;
+    
+    // 填入班別明細
     document.getElementById('smartShiftDetail').innerText = shiftObj.detail;
     
     const btn = document.getElementById('smartCheckInBtn');
+    const titleEl = document.getElementById('smartCheckInTitle');
     
     if (shiftObj.expectedCheckType === "簽退") {
-        // 簽退狀態：紅色系 + 揮手圖示
+        // 📍 簽退狀態：修改標題文字與顏色，搭配紅色揮手按鈕
+        titleEl.innerText = "💡 系統偵測到您的目前值勤為：";
+        titleEl.style.color = "#c62828"; // 改為深紅色系，與簽退按鈕呼應
+        
         btn.style.background = "#ff4d4f"; 
         btn.style.boxShadow = "0 4px 6px rgba(255, 77, 79, 0.3)";
         btn.innerHTML = `👋 沒錯，我要確認 <span id="smartCheckTypeLabel">簽退</span>`;
     } else {
-        // 簽到狀態：經典綠色 + 打勾圖示
+        // 📍 簽到狀態：恢復原有的綠色系與文字
+        titleEl.innerText = "✨ 系統偵測到您有一筆即將開始的勤務：";
+        titleEl.style.color = "#00695c"; 
+        
         btn.style.background = "#00B900"; 
         btn.style.boxShadow = "0 4px 6px rgba(0, 185, 0, 0.3)";
         btn.innerHTML = `✅ 沒錯，我要確認 <span id="smartCheckTypeLabel">簽到</span>`;
