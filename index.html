@@ -82,6 +82,31 @@
 
             <div id="lastActionStatus" style="text-align:center; font-weight:bold; color:var(--secondary-text); margin-bottom: 10px; display:none;"></div>
 
+            <!-- 🧪 系統管理員虛擬定位測試專區 (僅限系統管理員顯示) -->
+            <div id="sysAdminMockGpsPanel" style="display:none; background:#f3e5f5; border:2px solid #ab47bc; border-radius:12px; padding:15px; margin-bottom:15px;">
+                <div style="font-weight:bold; color:#6a1b9a; font-size:15px; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+                    <span>🧪</span> 系統管理員測試專區 (虛擬定位)
+                </div>
+                <div style="font-size:12px; color:#4a148c; background:#e1bee7; padding:8px; border-radius:6px; margin-bottom:10px; line-height:1.5;">
+                    <b>📍 系統設定基準座標：</b>新總館 (23.0250, 120.2378)<br>
+                    <b>📏 允許打卡範圍：</b>100 公尺以內
+                </div>
+                <label style="font-weight:bold; font-size:14px; color:#4a148c; cursor:pointer; display:block; margin-bottom:8px;">
+                    <input type="checkbox" id="enableMockGps" onchange="toggleMockGpsInputs()"> 啟用虛擬測試定位 (替代手機實體 GPS)
+                </label>
+                <div id="mockGpsFields" style="display:none; margin-top:8px; background:white; padding:10px; border-radius:8px; border:1px solid #ce93d8;">
+                    <div style="font-size:13px; font-weight:bold; color:#6a1b9a; margin-bottom:6px;">請選擇測試模擬狀態：</div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <label style="font-size:13px; color:#1b5e20; cursor:pointer; font-weight:bold;">
+                            <input type="radio" name="mockGpsMode" value="inside" checked> 🎯 範圍內 (傳送基準座標，計算 0 公尺)
+                        </label>
+                        <label style="font-size:13px; color:#b71c1c; cursor:pointer; font-weight:bold;">
+                            <input type="radio" name="mockGpsMode" value="outside"> ❌ 範圍外 (傳送超距座標，計算 500 公尺)
+                        </label>
+                    </div>
+                </div>
+            </div>
+
             <!-- 智慧打卡區塊 (簽到與簽退共用) -->
             <div id="smartCheckInArea" class="smart-checkin-box">
                 <div style="font-size: 30px; margin-bottom: 10px;">✨</div>
@@ -108,6 +133,9 @@
                 <div class="action-card" style="margin-top:15px;">
                     <button class="checkin-btn" id="checkInBtn">
                         <span style="font-size: 40px;">📍</span><span id="checkInBtnText">點我打卡</span>
+                    </button>
+                    <button onclick="openQuotaRemedyModal()" style="margin-top:15px; width:100%; background:#fff3e0; color:#e65100; border:1px solid #ffe0b2; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <span>✍️</span> 自主補登時數 (免定位/每年限5次，已使用 <span id="usedQuotaBadge">0</span>/5 次)
                     </button>
                 </div>
             </div>
@@ -321,12 +349,18 @@ function showSmartCheckInUI(titleText, shiftObj) {
     }
 }
 
+        let globalUsedQuota = 0;
+
         function checkBindingStatus() {
             fetch(GAS_URL, {
                 method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify({ action: "checkBinding", userId: currentUserId, lineName: currentLineName })
             }).then(res => res.json()).then(result => {
                 isCulturalHoursEnabled = result.culturalHoursEnabled || false;
+                globalUsedQuota = result.usedQuota || 0;
+                const badgeEl = document.getElementById('usedQuotaBadge');
+                if (badgeEl) badgeEl.innerText = globalUsedQuota;
+
                 buildDynamicServiceOptions();
                 if (result.status === "bound") {
                     dbUserName = result.name; globalGroup = result.group; globalTitle = result.title;
@@ -336,11 +370,19 @@ function showSmartCheckInUI(titleText, shiftObj) {
                         let listHtml = '';
                         result.unapproved.forEach(u => listHtml += `<li>${u.date} ${u.time} - ${u.type} (${u.service})</li>`);
                         document.getElementById('unapprovedList').innerHTML = listHtml;
+                    } else {
+                        document.getElementById('unapprovedAlert').style.display = 'none';
                     }
                     if (result.lastAction) {
                         const actionDiv = document.getElementById('lastActionStatus');
                         actionDiv.style.display = 'block';
                         actionDiv.innerText = `🔄 今日上一筆紀錄：【 ${result.lastAction} 】`;
+
+                        // 📍 簽到完成後自動預選簽退 Radio 按鈕
+                        if (result.lastAction === "簽到") {
+                            const signOutRadio = document.querySelector('input[name="checkType"][value="簽退"]');
+                            if (signOutRadio) signOutRadio.checked = true;
+                        }
                     }
                     if (result.smartShift) {
                         currentSmartShift = result.smartShift;
@@ -394,11 +436,27 @@ function showSmartCheckInUI(titleText, shiftObj) {
             });
         });
 
+        function toggleMockGpsInputs() {
+            const isChecked = document.getElementById('enableMockGps').checked;
+            document.getElementById('mockGpsFields').style.display = isChecked ? 'block' : 'none';
+        }
+
+        function setMockGpsPreset(lat, lng) {
+            document.getElementById('mockLat').value = lat;
+            document.getElementById('mockLng').value = lng;
+        }
+
         function setupCheckInUI(group, title) {
             switchSection(document.getElementById('sectionCheckIn'));
             document.getElementById('systemSubtitle').innerText = "定位打卡/時數查詢系統";
             document.getElementById('userName').innerText = dbUserName;
             document.getElementById('userRole').innerText = formatRoleDisplay(group, title);
+            
+            const mockPanel = document.getElementById('sysAdminMockGpsPanel');
+            if (mockPanel) {
+                mockPanel.style.display = (title === "系統管理員" || globalTitle === "系統管理員") ? 'block' : 'none';
+            }
+
             const leaderBtn = document.getElementById('leaderQueryBtn');
             if (title === "大隊長" || title === "副隊長" || title === "小組長" || title === "副小組長") {
                 leaderBtn.style.display = 'flex';
@@ -424,33 +482,141 @@ function showSmartCheckInUI(titleText, shiftObj) {
             executeCheckIn(serviceType, checkTypeInput.value, document.getElementById('checkInBtn'));
         });
 
-        function executeCheckIn(serviceType, checkType, btnElement) {
+        function showGpsPermissionGuideModal(retryCallback) {
+            const guideHtml = `
+                <div style="text-align:left; font-size:14px; color:#333; line-height:1.6;">
+                    <div style="font-weight:bold; color:#c62828; margin-bottom:8px; font-size:15px;">📍 手機位置存取權限已被關閉</div>
+                    <div style="background:#fff8e1; padding:10px; border-radius:8px; border-left:4px solid #ffb300; margin-bottom:10px; font-size:13px;">
+                        瀏覽器安全性限制阻止跳出權限詢問。請依據您的手機類型操作解鎖（<b>無須關閉或重開 LINE</b>）：
+                    </div>
+                    <div style="margin-bottom:8px;"><b>🍎 iPhone (iOS / LINE)：</b><br>1. 點擊網址列左上角「<b>AA</b>」或「<b>🔒鎖頭</b>」圖示<br>2. 選擇「<b>網站設定</b>」➔「<b>位置</b>」➔ 改為「<b>允許</b>」</div>
+                    <div style="margin-bottom:10px;"><b>🤖 Android (Chrome / LINE)：</b><br>1. 點擊右上角「<b>⋮</b>」或網址列「<b>🔒鎖頭</b>」<br>2. 選擇「<b>權限 / 網站設定</b>」➔「<b>位置</b>」➔ 改為「<b>允許</b>」</div>
+                </div>
+            `;
+            
+            document.getElementById('resultIcon').innerHTML = froggyErrorImg;
+            document.getElementById('resultStatus').innerText = "📍 定位權限說明";
+            document.getElementById('resultDistance').innerHTML = guideHtml;
+            document.getElementById('resultOverlay').classList.add('show');
+        }
+
+        function openQuotaRemedyModal() {
+            if (globalUsedQuota >= 5) {
+                alert("⛔ 您今年的 5 次自主補登額度已用完。\n如有補登需求，請親洽館員由後台協助人工補登。");
+                return;
+            }
+            const remedyHtml = `
+                <div style="text-align:left; font-size:14px; color:#333;">
+                    <div style="background:#e0f2f1; padding:10px; border-radius:8px; border-left:4px solid #00897b; margin-bottom:12px; font-size:13px; color:#004d40;">
+                        💡 <b>親愛的志工夥伴您好：</b><br>
+                        每年享有 5 次免定位自主補登額度（目前已使用 <b>${globalUsedQuota}</b>/5 次）。請填寫實際執勤之日期與時間：
+                    </div>
+                    <label style="font-weight:bold; display:block; margin-bottom:4px;">📋 服務內容：</label>
+                    <select id="remedyService" style="width:100%; padding:8px; margin-bottom:10px; border-radius:6px; border:1px solid #ccc;">
+                       ${document.getElementById('serviceSelect').innerHTML}
+                    </select>
+                    <label style="font-weight:bold; display:block; margin-bottom:4px;">⏱️ 打卡類別：</label>
+                    <div style="display:flex; gap:15px; margin-bottom:10px;">
+                       <label><input type="radio" name="remedyCheckType" value="簽到" checked> 簽到</label>
+                       <label><input type="radio" name="remedyCheckType" value="簽退"> 簽退</label>
+                    </div>
+                    <label style="font-weight:bold; display:block; margin-bottom:4px;">📅 補登日期與時間：</label>
+                    <input type="datetime-local" id="remedyDateTime" style="width:100%; padding:8px; margin-bottom:12px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;">
+                    <button class="bind-btn" style="background:#00B900; width:100%; padding:12px;" onclick="submitQuotaRemedy()">✅ 確認自主補登</button>
+                </div>
+            `;
+            document.getElementById('resultIcon').innerHTML = `<span style="font-size:40px;">✍️</span>`;
+            document.getElementById('resultStatus').innerText = "自主補登時數";
+            document.getElementById('resultDistance').innerHTML = remedyHtml;
+            document.getElementById('resultOverlay').classList.add('show');
+
+            const now = new Date();
+            const localIsoStr = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+            document.getElementById('remedyDateTime').value = localIsoStr;
+        }
+
+        function submitQuotaRemedy() {
+            const srv = document.getElementById('remedyService').value;
+            const checkType = document.querySelector('input[name="remedyCheckType"]:checked').value;
+            const dt = document.getElementById('remedyDateTime').value;
+            if (!srv) { alert("請先選擇服務內容！"); return; }
+            if (!dt) { alert("請選擇補登日期與時間！"); return; }
+
+            document.getElementById('resultOverlay').classList.remove('show');
+            executeCheckIn(srv, checkType, document.getElementById('checkInBtn'), true, dt, "自主補登");
+        }
+
+        function executeCheckIn(serviceType, checkType, btnElement, isQuotaRemedy = false, customDateTimeStr = "", customRemark = "") {
             const originalText = btnElement.innerHTML;
             const statusMsg = document.getElementById('statusMsg');
-            btnElement.disabled = true; btnElement.innerText = "定位中...";
-            statusMsg.innerHTML = "正在取得 GPS 定位，請稍候...";
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    statusMsg.innerHTML = "定位成功，資料傳送中...";
-                    fetch(GAS_URL, {
-                        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-                        body: JSON.stringify({ action: "checkIn", userId: currentUserId, lat: pos.coords.latitude, lng: pos.coords.longitude, serviceType: serviceType, checkType: checkType })
-                    }).then(res => res.json()).then(result => {
-                        if (result.status === "success") {
-                            const timeStr = new Date().toLocaleTimeString('zh-TW', { hour12: false });
-                            const distanceInfo = result.distance !== undefined ? `\n📏 距離：${result.distance} 公尺` : "";
-                            const detailMsg = `👤 姓名：${dbUserName}\n📋 服務：${serviceType}\n⏱️ 狀態：${checkType}${distanceInfo}\n⏰ 時間：${timeStr}`;
-                            const mainHtml = `<div style="color: #00B900; font-weight: bold; font-size: 16px; margin-bottom: 10px;">✅ 打卡成功明細</div><div style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0; font-size: 15px; line-height: 1.8; color: #166534; text-align: left;"><div><b>👤 姓名：</b>${dbUserName}</div><div><b>📋 服務：</b>${serviceType}</div><div><b>⏱️ 狀態：</b>${checkType}</div>${result.distance !== undefined ? `<div><b>📏 距離：</b>${result.distance} 公尺</div>` : ""}<div style="margin-top: 5px; border-top: 1px dashed #86efac; padding-top: 5px;"><b>⏰ 時間：</b><span style="font-weight: bold; font-size: 16px;">${timeStr}</span></div></div>`;
-                            showPopup(true, "打卡成功！", detailMsg); statusMsg.innerHTML = mainHtml; 
-                        } else {
-                            showPopup(false, "打卡失敗", result.message); statusMsg.innerHTML = `<span style="color:#ff4d4f; font-weight:bold;">❌ 打卡失敗：</span><br>${result.message}`;
+            btnElement.disabled = true; btnElement.innerText = "處理中...";
+
+            const sendCheckInPayload = (lat, lng) => {
+                statusMsg.innerHTML = "資料傳送中...";
+                fetch(GAS_URL, {
+                    method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+                    body: JSON.stringify({ 
+                        action: "checkIn", userId: currentUserId, lat: lat, lng: lng, 
+                        serviceType: serviceType, checkType: checkType, 
+                        isQuotaRemedy: isQuotaRemedy, customDateTimeStr: customDateTimeStr, remark: customRemark 
+                    })
+                }).then(res => res.json()).then(result => {
+                    if (result.status === "success") {
+                        const timeStr = customDateTimeStr ? customDateTimeStr.replace("T", " ") : new Date().toLocaleTimeString('zh-TW', { hour12: false });
+                        const titleText = checkType === '簽到' ? '✅ 簽到成功！' : '👋 簽退成功！';
+                        const distanceInfo = isQuotaRemedy ? `\n📝 備註：志工自主補登 (當年度第 ${result.usedQuota}/5 次)` : (result.distance !== undefined ? `\n📏 距離：${result.distance} 公尺` : "");
+                        const detailMsg = `👤 姓名：${dbUserName}\n📋 服務：${serviceType}\n⏱️ 狀態：${checkType}${distanceInfo}\n⏰ 時間：${timeStr}`;
+                        
+                        showPopup(true, titleText, detailMsg); 
+                        statusMsg.innerHTML = `<div style="color: #00B900; font-weight: bold; font-size: 16px; margin-bottom: 10px;">${titleText}明細</div><div style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0; font-size: 15px; line-height: 1.8; color: #166534; text-align: left;"><div><b>👤 姓名：</b>${dbUserName}</div><div><b>📋 服務：</b>${serviceType}</div><div><b>⏱️ 狀態：</b>${checkType}</div>${isQuotaRemedy ? `<div><b>📝 備註：</b>自主補登 (當年度第 ${result.usedQuota}/5 次)</div>` : (result.distance !== undefined ? `<div><b>📏 距離：</b>${result.distance} 公尺</div>` : "")}<div style="margin-top: 5px; border-top: 1px dashed #86efac; padding-top: 5px;"><b>⏰ 時間：</b><span style="font-weight: bold; font-size: 16px;">${timeStr}</span></div></div>`; 
+
+                        // 📍 打卡成功後自動重整畫面
+                        setTimeout(() => { checkBindingStatus(); }, 800);
+                    } else {
+                        const titleText = checkType === '簽到' ? '❌ 簽到失敗' : '❌ 簽退失敗';
+                        let extraTip = "";
+                        if (result.message.indexOf("不在執勤範圍") > -1) {
+                            extraTip = "\n\n💡 小撇步：若您已在館內，請嘗試連線館內 Wi-Fi「tainan」，連線後再試一次打卡，可大幅提高定位精確度！";
                         }
-                        btnElement.disabled = false; btnElement.innerHTML = originalText;
-                    });
-                },
-                (err) => { showPopup(false, "定位失敗", "請確認手機已開啟位置權限。"); statusMsg.innerHTML = `<span style="color:#ff4d4f; font-weight:bold;">❌ 定位失敗：</span>請確認手機已開啟位置權限。`; btnElement.disabled = false; btnElement.innerHTML = originalText; },
-                { enableHighAccuracy: true, timeout: 10000 }
-            );
+                        showPopup(false, titleText, result.message + extraTip); 
+                        statusMsg.innerHTML = `<span style="color:#ff4d4f; font-weight:bold;">${titleText}：</span><br>${result.message}`;
+                    }
+                    btnElement.disabled = false; btnElement.innerHTML = originalText;
+                }).catch(err => {
+                    showPopup(false, "網路連線失敗", "連線失敗，請檢查網路設定後再試一次。");
+                    btnElement.disabled = false; btnElement.innerHTML = originalText;
+                });
+            };
+
+            if (isQuotaRemedy) {
+                sendCheckInPayload(0, 0);
+            } else {
+                const mockCheckbox = document.getElementById('enableMockGps');
+                if (mockCheckbox && mockCheckbox.checked && (globalTitle === "系統管理員" || isViewAsVolunteer)) {
+                    const mockModeInput = document.querySelector('input[name="mockGpsMode"]:checked');
+                    const mockMode = mockModeInput ? mockModeInput.value : 'inside';
+                    const mockLat = mockMode === 'inside' ? 23.0250 : 23.0295;
+                    const mockLng = 120.2378;
+                    const modeLabel = mockMode === 'inside' ? '🎯 範圍內 (0m)' : '❌ 範圍外 (500m)';
+                    statusMsg.innerHTML = `🧪 [虛擬測試模式：${modeLabel}] 傳送座標中...`;
+                    sendCheckInPayload(mockLat, mockLng);
+                } else {
+                    statusMsg.innerHTML = "正在取得 GPS 定位，請稍候...";
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => { sendCheckInPayload(pos.coords.latitude, pos.coords.longitude); },
+                        (err) => { 
+                            btnElement.disabled = false; btnElement.innerHTML = originalText;
+                            if (err.code === 1) {
+                                showGpsPermissionGuideModal();
+                            } else {
+                                showPopup(false, "定位失敗", "請確認手機已開啟位置定位功能。\n\n💡 小撇步：連線館內 Wi-Fi「tainan」可大幅提升精確度唷！"); 
+                                statusMsg.innerHTML = `<span style="color:#ff4d4f; font-weight:bold;">❌ 定位失敗：</span>請確認手機定位已開啟。`; 
+                            }
+                        },
+                        { enableHighAccuracy: true, timeout: 10000 }
+                    );
+                }
+            }
         }
 
         // --- 館員 UI ---
