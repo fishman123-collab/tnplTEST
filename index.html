@@ -694,6 +694,9 @@ function showSmartCheckInUI(titleText, shiftObj) {
                                 </div>
                                 <span class="record-tag">${record.checkType}</span>
                             </div>
+                            <div style="font-size:13px; color:#0f766e; background:#ccfbf1; border:1px solid #99f6e4; padding:8px 12px; border-radius:6px; margin-bottom:10px; display:flex; align-items:center; gap:5px;">
+                                <span>📅</span> <b>本日排班：</b><span>${record.scheduledShiftInfo || '當日無排班'}</span>
+                            </div>
                             <div style="font-size:14px; margin-bottom:15px; background: ${styles.bg}; padding: 12px; border-radius: 8px; border: 1px solid ${styles.border}; display: flex; align-items: center; flex-wrap: wrap; gap: 5px;">
                                 <span style="font-weight:bold; color:${styles.text};">🕒 ${timeLabel}：</span> <span style="color:${styles.text}; margin-right: 5px;">${displayDate}</span>
                                 <div style="display:flex; align-items:center; gap:3px;">
