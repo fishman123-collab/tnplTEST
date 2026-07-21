@@ -134,9 +134,11 @@
                     <button class="checkin-btn" id="checkInBtn">
                         <span style="font-size: 40px;">📍</span><span id="checkInBtnText">點我打卡</span>
                     </button>
+                    <!-- 暫時停用「自主補登」前台按鈕
                     <button onclick="openQuotaRemedyModal()" style="margin-top:15px; width:100%; background:#fff3e0; color:#e65100; border:1px solid #ffe0b2; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; gap:6px;">
                         <span>✍️</span> 自主補登時數 (免定位/每年限5次，已使用 <span id="usedQuotaBadge">0</span>/5 次)
                     </button>
+                    -->
                 </div>
             </div>
 
@@ -500,6 +502,7 @@ function showSmartCheckInUI(titleText, shiftObj) {
             document.getElementById('resultOverlay').classList.add('show');
         }
 
+        /* 暫時停用自主補登彈窗邏輯
         function openQuotaRemedyModal() {
             if (globalUsedQuota >= 5) {
                 alert("⛔ 您今年的 5 次自主補登額度已用完。\n如有補登需求，請親洽館員由後台協助人工補登。");
@@ -545,6 +548,7 @@ function showSmartCheckInUI(titleText, shiftObj) {
             document.getElementById('resultOverlay').classList.remove('show');
             executeCheckIn(srv, checkType, document.getElementById('checkInBtn'), true, dt, "自主補登");
         }
+        */
 
         function executeCheckIn(serviceType, checkType, btnElement, isQuotaRemedy = false, customDateTimeStr = "", customRemark = "") {
             const originalText = btnElement.innerHTML;
