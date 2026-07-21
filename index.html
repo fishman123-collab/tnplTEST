@@ -73,6 +73,12 @@
                 </div>
             </div>
 
+            <div id="anomalyAlertArea" class="alert-box" style="display:none; background:#fff8e1; border:2px solid #ffb300;">
+               <div style="font-weight: bold; color: #d84315; margin-bottom: 5px; font-size:16px;">⚠️ 異常提醒 (跨日未簽退)</div>
+               <div style="font-size: 14px; color: #555;">系統偵測到您在 <span id="anomalyDate" style="color:red; font-weight:bold;"></span> 有一筆 <span id="anomalyService" style="color:#d84315; font-weight:bold;"></span> 的紀錄尚未簽退！</div>
+               <div style="font-size: 13px; color: #d84315; margin-top: 8px; font-weight: bold;">※ 本次打卡仍可繼續，但請記得提醒館員為您補登該筆簽退，以免該段時數流失！</div>
+            </div>
+
             <div id="unapprovedAlert" class="alert-box">
                <div style="font-weight: bold; color: #f57f17; margin-bottom: 5px;">💡 親愛的夥伴您好：</div>
                <div style="font-size: 14px; color: #555;">您尚有 <span id="unapprovedCount" style="color:red; font-weight:bold;">0</span> 筆打卡等待審核，明細如下：</div>
@@ -375,6 +381,14 @@ function showSmartCheckInUI(titleText, shiftObj) {
                     } else {
                         document.getElementById('unapprovedAlert').style.display = 'none';
                     }
+                    if (result.hasAnomaly && result.anomalyInfo) {
+                        document.getElementById('anomalyAlertArea').style.display = 'block';
+                        document.getElementById('anomalyDate').innerText = result.anomalyInfo.date;
+                        document.getElementById('anomalyService').innerText = result.anomalyInfo.service;
+                    } else {
+                        document.getElementById('anomalyAlertArea').style.display = 'none';
+                    }
+
                     if (result.lastAction) {
                         const actionDiv = document.getElementById('lastActionStatus');
                         actionDiv.style.display = 'block';
