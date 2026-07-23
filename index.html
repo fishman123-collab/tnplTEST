@@ -660,6 +660,16 @@ function showSmartCheckInUI(titleText, shiftObj) {
 
         let pendingGroupMode = 'volunteer'; // 'volunteer' 或 'activity'
         let cachedPendingRecords = [];
+        let activeGroupFilterKey = null; // 📍 用於紀錄當前是否「僅顯示單一活動」
+
+        const groupMorandiThemes = [
+            { bg: '#f0f9ff', border: '#7dd3fc', headerText: '#0369a1', badgeBg: '#0284c7' }, // 天藍莫蘭迪
+            { bg: '#f0fdf4', border: '#86efac', headerText: '#15803d', badgeBg: '#16a34a' }, // 薄荷綠莫蘭迪
+            { bg: '#faf5ff', border: '#c084fc', headerText: '#6b21a8', badgeBg: '#9333ea' }, // 薰衣草紫莫蘭迪
+            { bg: '#fff7ed', border: '#fdba74', headerText: '#c2410c', badgeBg: '#ea580c' }, // 暖橙莫蘭迪
+            { bg: '#fdf2f8', border: '#f472b6', headerText: '#be185d', badgeBg: '#db2777' }, // 玫瑰粉莫蘭迪
+            { bg: '#f1f5f9', border: '#94a3b8', headerText: '#334155', badgeBg: '#475569' }  // 灰藍莫蘭迪
+        ];
 
         function setPendingGroupMode(mode) {
             pendingGroupMode = mode;
@@ -816,14 +826,23 @@ function showSmartCheckInUI(titleText, shiftObj) {
                     groups[key].push(record);
                 });
 
+                let gIdx = 0;
                 for (let key in groups) {
+                    const theme = groupMorandiThemes[gIdx % groupMorandiThemes.length];
+                    gIdx++;
+
+                    const isFilteredOut = activeGroupFilterKey && activeGroupFilterKey !== key;
                     const groupContainer = document.createElement('div');
-                    groupContainer.style.cssText = "background:#f1f5f9; border:2px solid #cbd5e1; border-radius:12px; padding:15px; margin-bottom:20px;";
+                    groupContainer.style.cssText = `background:${theme.bg}; border:2px solid ${theme.border}; border-radius:12px; padding:15px; margin-bottom:20px; ${isFilteredOut ? 'display:none;' : 'display:block;'}`;
                     
+                    const isSelectedGroup = activeGroupFilterKey === key;
+                    const btnText = isSelectedGroup ? '↩️ 顯示所有活動' : '☑️ 僅顯示並勾選此活動全體';
+                    const btnBg = isSelectedGroup ? '#334155' : theme.badgeBg;
+
                     const headerHtml = `
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:2px solid #cbd5e1; padding-bottom:8px;">
-                            <div style="font-weight:bold; font-size:16px; color:#1e293b;">🎪 ${key} <span style="font-size:14px; color:#64748b; font-weight:normal;">(共 ${groups[key].length} 筆待審核)</span></div>
-                            <button onclick="selectGroupForBatch('${encodeURIComponent(key)}')" style="background:#0284c7; color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:13px;">☑️ 勾選此活動全體</button>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:2px solid ${theme.border}; padding-bottom:8px;">
+                            <div style="font-weight:bold; font-size:16px; color:${theme.headerText};">🎪 ${key} <span style="font-size:14px; opacity:0.85; font-weight:normal;">(共 ${groups[key].length} 筆待審核)</span></div>
+                            <button onclick="selectGroupForBatch('${encodeURIComponent(key)}')" style="background:${btnBg}; color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:13px;">${btnText}</button>
                         </div>
                     `;
                     groupContainer.innerHTML = headerHtml;
@@ -838,14 +857,25 @@ function showSmartCheckInUI(titleText, shiftObj) {
 
         function selectGroupForBatch(encodedKey) {
             const key = decodeURIComponent(encodedKey);
+            
+            // 📍 若點選已篩選的活動按鈕，則切換回顯示全部活動
+            if (activeGroupFilterKey === key) {
+                activeGroupFilterKey = null;
+                renderPendingRecords();
+                updateBatchCount();
+                return;
+            }
+
+            activeGroupFilterKey = key;
             if (!isBatchMode) toggleBatchMode();
+            
             cachedPendingRecords.forEach(record => {
                 const rKey = record.scheduledShiftInfo && record.scheduledShiftInfo !== '當日無排班' ? record.scheduledShiftInfo : `${record.serviceType} (無排班資訊)`;
-                if (rKey === key) {
-                    const cb = document.getElementById(`cb_${record.uuid}`);
-                    if (cb) cb.checked = true;
-                }
+                const cb = document.getElementById(`cb_${record.uuid}`);
+                if (cb) cb.checked = (rKey === key);
             });
+
+            renderPendingRecords();
             updateBatchCount();
         }
 
@@ -1323,6 +1353,8 @@ function showSmartCheckInUI(titleText, shiftObj) {
                 checkboxes.forEach(cb => { cb.style.display = 'inline-block'; cb.checked = false; }); individualBtns.forEach(b => b.style.display = 'none'); 
                 submitBatchBtn.style.display = 'block'; updateBatchCount();
             } else {
+                activeGroupFilterKey = null; // 📍 退出批次時還原顯示所有活動
+                renderPendingRecords();
                 btn.innerText = "☑️ 批次審核"; btn.style.background = "#e3f2fd"; btn.style.color = "#1565c0";
                 checkboxes.forEach(cb => cb.style.display = 'none'); individualBtns.forEach(b => b.style.display = 'block'); submitBatchBtn.style.display = 'none';
             }
