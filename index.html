@@ -201,11 +201,11 @@
             <div class="profile-card" style="margin-bottom: 15px; padding: 15px;">
                 <div><h2 id="staffName" style="margin: 0; font-size: 18px;">館員您好</h2><p id="adminRole" style="margin: 3px 0 0; font-size: 13px; color: var(--secondary-text);">管理員模式已啟動</p></div>
             </div>
-            <div class="admin-header">
                 <h2>📋 待審核清單</h2>
                 <div style="display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end;">
                     <button class="refresh-btn" id="btnBatchMode" onclick="toggleBatchMode()" style="background:#e3f2fd; color:#1565c0; font-weight:bold;">☑️ 批次審核</button>
                     <button class="refresh-btn" id="btnToggleCultural" onclick="toggleCulturalMode()" style="background:#f3e5f5; color:#8e24aa; font-weight:bold;">🎭 文化時數</button>
+                    <button class="refresh-btn" id="btnToggleManualCheckIn" onclick="toggleManualCheckInMode()" style="background:#e8f5e9; color:#2e7d32; font-weight:bold;">✋ 手動打卡</button>
                     <button class="refresh-btn" onclick="openManualEntryUI()" style="background:#fff3e0; color:#e65100; font-weight:bold;">➕ 補登</button>
                     <button class="refresh-btn" onclick="openAdminQueryUI()" style="background:#e0f2f1; color:#00897b; font-weight:bold;">📊 總查詢</button>
                     <button class="refresh-btn" onclick="fetchPendingRecords()">🔄 重整</button>
@@ -298,7 +298,8 @@
     </div>
 
     <script>
-        let isCulturalHoursEnabled = false; 
+        let isCulturalHoursEnabled = false;
+        let isManualCheckInEnabled = false;
         const LIFF_ID = "2008914129-Q1XxBsw0"; 
         const GAS_URL = "https://script.google.com/macros/s/AKfycby9uXQYCxlI_ENBsh-3aG_cdZTMiW52f8ARtQjwchqCLoDFpg1drRjauMIvTMBkwjJU/exec"; 
 
@@ -307,6 +308,7 @@
 
         const froggySuccessImg = `<img src="DK1.png" alt="成功" style="height:100px; margin-bottom:15px;">`;
         const froggyErrorImg = `<img src="DK2.png" alt="失敗" style="height:100px; margin-bottom:15px;">`;
+
 
         function formatDateWithDay(dateStr) {
             const dateObj = new Date(dateStr.replace(/-/g, '/'));
@@ -334,35 +336,26 @@
             else return `${group} - ${displayTitle}`;
         }
 
-        // 🎉 更新後的程式碼 (加入顏色與圖示的動態判斷)
-function showSmartCheckInUI(titleText, shiftObj) {
-    document.getElementById('smartCheckInArea').style.display = 'block';
-    document.getElementById('manualCheckInArea').style.display = 'none';
-    
-    // 填入班別明細
-    document.getElementById('smartShiftDetail').innerText = shiftObj.detail;
-    
-    const btn = document.getElementById('smartCheckInBtn');
-    const titleEl = document.getElementById('smartCheckInTitle');
-    
-    if (shiftObj.expectedCheckType === "簽退") {
-        // 📍 簽退狀態：修改標題文字與顏色，搭配紅色揮手按鈕
-        titleEl.innerText = "💡 系統偵測到您的目前值勤為：";
-        titleEl.style.color = "#c62828"; // 改為深紅色系，與簽退按鈕呼應
-        
-        btn.style.background = "#ff4d4f"; 
-        btn.style.boxShadow = "0 4px 6px rgba(255, 77, 79, 0.3)";
-        btn.innerHTML = `👋 沒錯，我要確認 <span id="smartCheckTypeLabel">簽退</span>`;
-    } else {
-        // 📍 簽到狀態：恢復原有的綠色系與文字
-        titleEl.innerText = "✨ 系統偵測到您有一筆即將開始的勤務：";
-        titleEl.style.color = "#00695c"; 
-        
-        btn.style.background = "#00B900"; 
-        btn.style.boxShadow = "0 4px 6px rgba(0, 185, 0, 0.3)";
-        btn.innerHTML = `✅ 沒錯，我要確認 <span id="smartCheckTypeLabel">簽到</span>`;
-    }
-}
+        function showSmartCheckInUI(titleText, shiftObj) {
+            document.getElementById('smartCheckInArea').style.display = 'block';
+            document.getElementById('manualCheckInArea').style.display = 'none';
+            document.getElementById('smartShiftDetail').innerText = shiftObj.detail;
+            const btn = document.getElementById('smartCheckInBtn');
+            const titleEl = document.getElementById('smartCheckInTitle');
+            if (shiftObj.expectedCheckType === "簽退") {
+                titleEl.innerText = "💡 系統偵測到您的目前值勤為：";
+                titleEl.style.color = "#c62828";
+                btn.style.background = "#ff4d4f"; 
+                btn.style.boxShadow = "0 4px 6px rgba(255, 77, 79, 0.3)";
+                btn.innerHTML = `👋 沒錯，我要確認 <span id="smartCheckTypeLabel">簽退</span>`;
+            } else {
+                titleEl.innerText = "✨ 系統偵測到您有一筆即將開始的勤務：";
+                titleEl.style.color = "#00695c"; 
+                btn.style.background = "#00B900"; 
+                btn.style.boxShadow = "0 4px 6px rgba(0, 185, 0, 0.3)";
+                btn.innerHTML = `✅ 沒錯，我要確認 <span id="smartCheckTypeLabel">簽到</span>`;
+            }
+        }
 
         let globalUsedQuota = 0;
 
@@ -372,6 +365,7 @@ function showSmartCheckInUI(titleText, shiftObj) {
                 body: JSON.stringify({ action: "checkBinding", userId: currentUserId, lineName: currentLineName })
             }).then(res => res.json()).then(result => {
                 isCulturalHoursEnabled = result.culturalHoursEnabled || false;
+                isManualCheckInEnabled = result.manualCheckInEnabled || false;
                 globalUsedQuota = result.usedQuota || 0;
                 const badgeEl = document.getElementById('usedQuotaBadge');
                 if (badgeEl) badgeEl.innerText = globalUsedQuota;
@@ -404,7 +398,6 @@ function showSmartCheckInUI(titleText, shiftObj) {
                         actionDiv.style.display = 'block';
                         actionDiv.innerText = `🔄 今日上一筆紀錄：【 ${result.lastAction} 】`;
 
-                        // 📍 簽到完成後自動預選簽退 Radio 按鈕
                         if (result.lastAction === "簽到") {
                             const signOutRadio = document.querySelector('input[name="checkType"][value="簽退"]');
                             if (signOutRadio) signOutRadio.checked = true;
@@ -413,17 +406,28 @@ function showSmartCheckInUI(titleText, shiftObj) {
                     if (result.smartShift) {
                         currentSmartShift = result.smartShift;
                         showSmartCheckInUI("系統偵測到您有一筆即將開始的勤務：", currentSmartShift);
-                    } else if (result.lastAction === "簽到") {
-                        currentSmartShift = {
-                            detail: `📍 進行中勤務：${result.lastService}`,
-                            mappedService: result.lastService,
-                            expectedCheckType: "簽退"
-                        };
-                        showSmartCheckInUI("您有一筆勤務尚未簽退，請確認：", currentSmartShift);
                     } else {
                         document.getElementById('smartCheckInArea').style.display = 'none';
-                        document.getElementById('manualCheckInArea').style.display = 'block';
+                        if (result.manualCheckInEnabled || result.culturalHoursEnabled) {
+                            document.getElementById('manualCheckInArea').style.display = 'block';
+                        } else {
+                            document.getElementById('manualCheckInArea').style.display = 'none';
+                            if (!document.getElementById('manualCheckInDisabledMsg')) {
+                                const msgDiv = document.createElement('div');
+                                msgDiv.id = 'manualCheckInDisabledMsg';
+                                msgDiv.style.cssText = "background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px 15px; text-align: center; color: #64748b; margin-top: 15px;";
+                                msgDiv.innerHTML = `<div style="font-size: 40px; margin-bottom: 10px;">☕</div><div style="font-weight: bold; font-size: 16px; margin-bottom: 5px;">目前無待處理之打卡勤務</div><div style="font-size: 14px;">若您臨時受派支援，請洽詢服務台館員為您設定排班或補登紀錄。</div>`;
+                                document.getElementById('sectionCheckIn').appendChild(msgDiv);
+                            } else {
+                                document.getElementById('manualCheckInDisabledMsg').style.display = 'block';
+                            }
+                        }
                     }
+                    if (result.smartShift || result.manualCheckInEnabled || result.culturalHoursEnabled) {
+                        const disabledMsg = document.getElementById('manualCheckInDisabledMsg');
+                        if (disabledMsg) disabledMsg.style.display = 'none';
+                    }
+
                     if (result.role === "staff") setupAdminUI(globalGroup, globalTitle); 
                     else setupCheckInUI(globalGroup, globalTitle);
                 } else {
@@ -497,7 +501,7 @@ function showSmartCheckInUI(titleText, shiftObj) {
         }
 
         document.getElementById('smartCheckInBtn').addEventListener('click', () => {
-            executeCheckIn(currentSmartShift.mappedService, currentSmartShift.expectedCheckType, document.getElementById('smartCheckInBtn'));
+            executeCheckIn(currentSmartShift.mappedService, currentSmartShift.expectedCheckType, document.getElementById('smartCheckInBtn'), false, "", "", currentSmartShift.detail);
         });
 
         document.getElementById('checkInBtn').addEventListener('click', () => {
@@ -574,7 +578,7 @@ function showSmartCheckInUI(titleText, shiftObj) {
         }
         */
 
-        function executeCheckIn(serviceType, checkType, btnElement, isQuotaRemedy = false, customDateTimeStr = "", customRemark = "") {
+        function executeCheckIn(serviceType, checkType, btnElement, isQuotaRemedy = false, customDateTimeStr = "", customRemark = "", shiftInfo = "", forceOverwrite = false) {
             const originalText = btnElement.innerHTML;
             const statusMsg = document.getElementById('statusMsg');
             btnElement.disabled = true; btnElement.innerText = "處理中...";
@@ -586,9 +590,19 @@ function showSmartCheckInUI(titleText, shiftObj) {
                     body: JSON.stringify({ 
                         action: "checkIn", userId: currentUserId, lat: lat, lng: lng, 
                         serviceType: serviceType, checkType: checkType, 
-                        isQuotaRemedy: isQuotaRemedy, customDateTimeStr: customDateTimeStr, remark: customRemark 
+                        isQuotaRemedy: isQuotaRemedy, customDateTimeStr: customDateTimeStr, remark: customRemark,
+                        shiftInfo: shiftInfo, forceOverwrite: forceOverwrite
                     })
                 }).then(res => res.json()).then(result => {
+                    if (result.status === "confirm_overwrite") {
+                        btnElement.disabled = false; btnElement.innerHTML = originalText;
+                        if (confirm(result.message)) {
+                            executeCheckIn(serviceType, checkType, btnElement, isQuotaRemedy, customDateTimeStr, customRemark, shiftInfo, true);
+                        } else {
+                            statusMsg.innerHTML = "已取消更新簽退時間。";
+                        }
+                        return;
+                    }
                     if (result.status === "success") {
                         const timeStr = customDateTimeStr ? customDateTimeStr.replace("T", " ") : new Date().toLocaleTimeString('zh-TW', { hour12: false });
                         const titleText = checkType === '簽到' ? '✅ 簽到成功！' : '👋 簽退成功！';
@@ -769,10 +783,13 @@ function showSmartCheckInUI(titleText, shiftObj) {
                        </div>`
                     : `<input type="hidden" id="mul_${record.uuid}" value="1"><input type="hidden" id="ext_${record.uuid}" value="0">`;
                     
+                const rKey = record.scheduledShiftInfo && record.scheduledShiftInfo !== '當日無排班' ? record.scheduledShiftInfo : `${record.serviceType} (無排班資訊)`;
+                const isCheckedAttr = (activeGroupFilterKey === rKey && isBatchMode) ? 'checked' : '';
+
                 card.innerHTML = `
                     <div class="record-title" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleCardCheckbox('${record.uuid}', event)">
                         <div style="display:flex; align-items:center;">
-                            <input type="checkbox" class="batch-checkbox" id="cb_${record.uuid}" value="${record.uuid}" style="display:${isBatchMode ? 'inline-block' : 'none'}; transform: scale(1.5); margin-right: 15px; cursor:pointer;" onclick="event.stopPropagation(); updateBatchCount();">
+                            <input type="checkbox" class="batch-checkbox" id="cb_${record.uuid}" value="${record.uuid}" data-checktype="${record.checkType}" style="display:${isBatchMode ? 'inline-block' : 'none'}; transform: scale(1.5); margin-right: 15px; cursor:pointer;" onclick="event.stopPropagation(); updateBatchCount();" ${isCheckedAttr}>
                             <span>👤 ${record.volunteerName}</span>
                         </div>
                         <span class="record-tag">${record.checkType}</span>
@@ -781,8 +798,14 @@ function showSmartCheckInUI(titleText, shiftObj) {
                         <span>📅</span> <b>本日排班：</b><span>${record.scheduledShiftInfo || '當日無排班'}</span>
                     </div>
                     <div style="font-size:12px; color:#475569; background:#f8fafc; border:1px solid #e2e8f0; padding:6px 10px; border-radius:6px; margin-bottom:10px; display:flex; align-items:center; gap:5px;">
-                        <span>📍</span> <b>志工原始打卡時間 (P欄備查)：</b><span>${record.rawTime || record.timestamp.replace('T', ' ')}</span>
+                        <span>📍</span> <b>志工最後打卡時間 (P欄備查)：</b><span>${record.rawTime || record.timestamp.replace('T', ' ')}</span>
                     </div>
+                    ${record.punchHistory ? `
+                    <details style="margin-bottom:10px; font-size:12px; color:#64748b; background:#f1f5f9; padding:6px 10px; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer;">
+                        <summary style="font-weight:bold; outline:none;">📜 打卡覆寫歷程 (Q欄)</summary>
+                        <div style="margin-top:5px; padding-top:5px; border-top:1px dashed #cbd5e1; font-family:monospace;">${record.punchHistory}</div>
+                    </details>
+                    ` : ''}
                     <div style="font-size:14px; margin-bottom:12px; background: ${styles.bg}; padding: 12px; border-radius: 8px; border: 1px solid ${styles.border}; display: flex; align-items: center; flex-wrap: wrap; gap: 5px;">
                         <span style="font-weight:bold; color:${styles.text};">🕒 ${timeLabel}：</span> <span style="color:${styles.text}; margin-right: 5px;">${displayDate}</span>
                         <div style="display:flex; align-items:center; gap:3px;">
@@ -849,6 +872,28 @@ function showSmartCheckInUI(titleText, shiftObj) {
                         </div>
                     `;
                     groupContainer.innerHTML = headerHtml;
+
+                    if (isSelectedGroup) {
+                        const masterPanel = document.createElement('div');
+                        masterPanel.style.cssText = `background:#ffffff; border:1px dashed ${theme.border}; padding:12px; border-radius:8px; margin-bottom:15px; display:flex; flex-direction:column; gap:10px;`;
+                        masterPanel.innerHTML = `
+                            <div style="font-weight:bold; font-size:14px; color:${theme.headerText};">⚙️ 批次統一設定 <span style="font-weight:normal; font-size:12px;">(僅套用於下方勾選的「簽退」卡片)</span></div>
+                            <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+                                <label style="font-size:13px; font-weight:bold; color:#0284c7; cursor:pointer; display:flex; align-items:center; gap:4px; background:#f0f9ff; padding:6px 10px; border-radius:6px; border:1px solid #bae6fd;">
+                                    <input type="checkbox" id="masterExtAct"> 統一註記 (活動延長)
+                                </label>
+                                <label style="font-size:13px; font-weight:bold; color:#166534; cursor:pointer; display:flex; align-items:center; gap:4px; background:#f0fdf4; padding:6px 10px; border-radius:6px; border:1px solid #bbf7d0;">
+                                    <input type="checkbox" id="masterOverrideTime" onchange="document.getElementById('masterTimeBox').style.display = this.checked ? 'flex' : 'none';"> 統一修改簽退時間
+                                    <div id="masterTimeBox" style="display:none; align-items:center; gap:5px; margin-left:5px;">
+                                        <select id="masterOutHour" style="border:1px solid #86efac; color:#15803d; font-weight:bold; font-size:14px; padding:2px; border-radius:4px; background:white;">${getOptions(23, '17')}</select>
+                                        <span style="font-weight:bold; color:#166534;">:</span>
+                                        <select id="masterOutMin" style="border:1px solid #86efac; color:#15803d; font-weight:bold; font-size:14px; padding:2px; border-radius:4px; background:white;">${getOptions(59, '00')}</select>
+                                    </div>
+                                </label>
+                            </div>
+                        `;
+                        groupContainer.appendChild(masterPanel);
+                    }
                     
                     groups[key].forEach(record => {
                         groupContainer.appendChild(renderCardHtml(record));
@@ -928,6 +973,13 @@ function showSmartCheckInUI(titleText, shiftObj) {
             const hoursDisplay = r.multiplier > 1 || r.extraHours > 0 ? `<span style="font-size:13px; color:#888; font-weight:normal; margin-bottom:3px; display:block;">(原始 ${r.rawHours.toFixed(2)})</span>${r.finalHours.toFixed(1)} <span style="font-size:12px;">hr</span>` : `${r.finalHours.toFixed(1)} <span style="font-size:12px;">hr</span>`;
             let nameHtml = showName ? `<div style="font-weight:bold; font-size:16px; margin-bottom:5px;">👤 ${r.volunteerName}</div>` : "";
             const shiftBadge = r.shiftInfo ? `<div style="font-size:12px; color:#334155; font-weight:bold; background:#f1f5f9; border:1px solid #cbd5e1; display:inline-block; padding:3px 8px; border-radius:10px; margin-bottom:3px;">🗓️ 班別：${r.shiftInfo}</div>` : "";
+            const historyHtml = r.punchHistory ? `
+                <details style="margin-top:5px; font-size:12px; color:#64748b; background:#f1f5f9; padding:6px 10px; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer;">
+                    <summary style="font-weight:bold; outline:none;">📜 打卡覆寫歷程 (Q欄)</summary>
+                    <div style="margin-top:5px; padding-top:5px; border-top:1px dashed #cbd5e1; font-family:monospace;">${r.punchHistory}</div>
+                </details>
+            ` : "";
+
             return `
                 <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 12px; border-left: 4px solid var(--primary-color);">
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; border-bottom: 1px dashed #eee; padding-bottom: 8px;">
@@ -940,6 +992,7 @@ function showSmartCheckInUI(titleText, shiftObj) {
                     <div style="font-size:13px; color:#555; margin-bottom:5px;">⏱️ ${r.startTime} ~ ${r.endTime} &nbsp; 📍 ${r.serviceType} ${multiplierText} ${extraText}</div>
                     <div style="margin-top:5px; display:flex; flex-wrap:wrap; align-items:center; gap:5px;">${shiftBadge}<div style="font-size:12px; color:#00897b; font-weight:bold; background:#e0f2f1; display:inline-block; padding:3px 8px; border-radius:10px; margin-bottom:3px;">✅ 確認館員：${r.staffName || '系統'}</div></div>
                     ${remarkHtml}
+                    ${historyHtml}
                 </div>
             `;
         }
@@ -1318,7 +1371,16 @@ function showSmartCheckInUI(titleText, shiftObj) {
         }
 
         function buildDynamicServiceOptions() {
-            const optionsHtml = `<option value="活動支援">活動支援</option><option value="五感值班">五感值班</option><option value="創客值班">創客值班</option><option value="導覽">導覽</option>${isCulturalHoursEnabled ? '<option value="文化時數">文化時數</option>' : ''}`;
+            let optionsHtml = '';
+            // 若開放手動打卡，則加入常規選項
+            if (isManualCheckInEnabled) {
+                optionsHtml += `<option value="活動支援">活動支援</option><option value="五感值班">五感值班</option><option value="創客值班">創客值班</option><option value="導覽">導覽</option>`;
+            }
+            // 若開放文化時數，則加入該選項
+            if (isCulturalHoursEnabled) {
+                optionsHtml += `<option value="文化時數">文化時數</option>`;
+            }
+
             const serviceSelect = document.getElementById('serviceSelect');
             if (serviceSelect) {
                 const currentVal = serviceSelect.value; serviceSelect.innerHTML = '<option value="" disabled selected>👉 請先選擇本次服務內容</option>' + optionsHtml;
@@ -1334,6 +1396,12 @@ function showSmartCheckInUI(titleText, shiftObj) {
                 if (isCulturalHoursEnabled) { btn.innerText = "🛑 關閉文化時數"; btn.style.background = "#ffebee"; btn.style.color = "#c62828"; } 
                 else { btn.innerText = "🎭 開放文化時數"; btn.style.background = "#f3e5f5"; btn.style.color = "#8e24aa"; }
             }
+
+            const btnManual = document.getElementById('btnToggleManualCheckIn');
+            if (btnManual) {
+                if (isManualCheckInEnabled) { btnManual.innerText = "🛑 關閉手動打卡"; btnManual.style.background = "#ffebee"; btnManual.style.color = "#c62828"; } 
+                else { btnManual.innerText = "✋ 開放手動打卡"; btnManual.style.background = "#e8f5e9"; btnManual.style.color = "#2e7d32"; }
+            }
         }
 
         function toggleCulturalMode() {
@@ -1342,6 +1410,21 @@ function showSmartCheckInUI(titleText, shiftObj) {
             }).then(res => res.json()).then(result => {
                 if(result.status === "success") { isCulturalHoursEnabled = result.newState; buildDynamicServiceOptions(); alert(isCulturalHoursEnabled ? "✅ 已開放「文化時數」！" : "🚫 已關閉「文化時數」！"); } 
                 else { alert("權限不足或操作失敗：" + result.message); buildDynamicServiceOptions(); }
+            }).catch(err => { alert("網路異常：" + err.message); buildDynamicServiceOptions(); });
+        }
+
+        function toggleManualCheckInMode() {
+            const newState = !isManualCheckInEnabled; const btn = document.getElementById('btnToggleManualCheckIn'); btn.innerText = "處理中 ⏳...";
+            fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "toggleManualCheckIn", userId: currentUserId, enable: newState })
+            }).then(res => res.json()).then(result => {
+                if(result.status === "success") { 
+                    isManualCheckInEnabled = result.newState; 
+                    buildDynamicServiceOptions(); 
+                    alert(isManualCheckInEnabled ? "✅ 已開放「手動打卡」！" : "🚫 已關閉「手動打卡」！"); 
+                } else { 
+                    alert("權限不足或操作失敗：" + result.message); 
+                    buildDynamicServiceOptions(); 
+                }
             }).catch(err => { alert("網路異常：" + err.message); buildDynamicServiceOptions(); });
         }
 
@@ -1378,15 +1461,41 @@ function showSmartCheckInUI(titleText, shiftObj) {
 
         function submitBatchApprove() {
             const checkboxes = document.querySelectorAll('.batch-checkbox:checked'); if (checkboxes.length === 0) return;
+            
+            // 📍 抓取全域設定 (如果有出現的話)
+            const masterExtAct = document.getElementById('masterExtAct');
+            const isMasterExtActChecked = masterExtAct ? masterExtAct.checked : false;
+            const masterOverrideTime = document.getElementById('masterOverrideTime');
+            const isMasterTimeChecked = masterOverrideTime ? masterOverrideTime.checked : false;
+            const mHour = document.getElementById('masterOutHour') ? document.getElementById('masterOutHour').value : "";
+            const mMin = document.getElementById('masterOutMin') ? document.getElementById('masterOutMin').value : "";
+
             const records = [];
             checkboxes.forEach(cb => {
-                const uuid = cb.value; const hourSelect = document.getElementById(`hour_${uuid}`); const minSelect = document.getElementById(`min_${uuid}`);
-                const datePart = hourSelect.getAttribute('data-date'); const newTime = `${datePart}T${hourSelect.value}:${minSelect.value}`;
+                const uuid = cb.value;
+                const checkType = cb.getAttribute('data-checktype');
+                
+                let hVal = document.getElementById(`hour_${uuid}`).value;
+                let mVal = document.getElementById(`min_${uuid}`).value;
+                let remark = document.getElementById(`rem_${uuid}`).value || "";
+                
+                // 📍 套用統一簽退設定 (僅限簽退卡片)
+                if (checkType === "簽退") {
+                    if (isMasterExtActChecked && remark.indexOf("(活動延長)") === -1) {
+                        remark += (remark ? " " : "") + "(活動延長)";
+                    }
+                    if (isMasterTimeChecked && mHour && mMin) {
+                        hVal = mHour;
+                        mVal = mMin;
+                    }
+                }
+                
+                const datePart = document.getElementById(`hour_${uuid}`).getAttribute('data-date'); 
+                const newTime = `${datePart}T${hVal}:${mVal}`;
                 
                 const srvInput = document.getElementById(`srv_${uuid}`); const serviceType = srvInput ? srvInput.value : "";
                 const mulInput = document.getElementById(`mul_${uuid}`); const multiplier = mulInput ? mulInput.value : 1; 
                 const extInput = document.getElementById(`ext_${uuid}`); const extraHours = extInput ? extInput.value : 0;
-                const remark = document.getElementById(`rem_${uuid}`).value;
                 const shiftInput = document.getElementById(`shift_${uuid}`); const shiftInfo = shiftInput ? shiftInput.value : "";
                 records.push({ uuid, newTime, serviceType, multiplier, extraHours, remark, shiftInfo });
             });
