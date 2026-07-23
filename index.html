@@ -74,8 +74,8 @@
             </div>
 
             <div id="anomalyAlertArea" class="alert-box" style="display:none; background:#fff8e1; border:2px solid #ffb300;">
-               <div style="font-weight: bold; color: #d84315; margin-bottom: 5px; font-size:16px;">⚠️ 異常提醒 (跨日未簽退)</div>
-               <div style="font-size: 14px; color: #555;">系統偵測到您有以下日期紀錄尚未簽退：</div>
+               <div style="font-weight: bold; color: #d84315; margin-bottom: 5px; font-size:16px;">⚠️ 異常提醒 (跨日未簽到/未簽退)</div>
+               <div style="font-size: 14px; color: #555;">系統偵測到您有以下日期紀錄異常：</div>
                <ul id="anomalyList" style="font-size: 13px; color: #d84315; font-weight:bold; margin-top: 5px; padding-left: 20px;"></ul>
                <div style="font-size: 13px; color: #d84315; margin-top: 8px; font-weight: bold;">※ 本次打卡仍可繼續，但請記得提醒館員為您補登，以免該段時數流失！</div>
             </div>
@@ -392,7 +392,7 @@ function showSmartCheckInUI(titleText, shiftObj) {
                         document.getElementById('anomalyAlertArea').style.display = 'block';
                         let aHtml = '';
                         result.anomalies.forEach(a => {
-                            aHtml += `<li>${a.date} - ${a.service}</li>`;
+                            aHtml += `<li>${a.date} - ${a.service} (${a.issue})</li>`;
                         });
                         document.getElementById('anomalyList').innerHTML = aHtml;
                     } else {
@@ -738,7 +738,9 @@ function showSmartCheckInUI(titleText, shiftObj) {
                 const targetTime = record.recommendedTime || record.timestamp;
                 const [datePart, timePart] = targetTime.split('T');
                 const displayDate = formatDateWithDay(datePart); 
-                const [origHour, origMin] = timePart.split(':');
+                const [origHour, origMin] = (timePart || "00:00").split(':');
+                const paddedHour = String(origHour).padStart(2, '0');
+                const paddedMin = String(origMin).padStart(2, '0');
                 const styles = isSignIn ? { bg: '#f0fdf4', border: '#bbf7d0', text: '#166534', input: '#00B900' } : { bg: '#fff1f0', border: '#ffa39e', text: '#a8071a', input: '#ff4d4f' };
      
                 const serviceHtml = isSignIn 
@@ -770,7 +772,7 @@ function showSmartCheckInUI(titleText, shiftObj) {
                 card.innerHTML = `
                     <div class="record-title" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleCardCheckbox('${record.uuid}', event)">
                         <div style="display:flex; align-items:center;">
-                            <input type="checkbox" class="batch-checkbox" id="cb_${record.uuid}" value="${record.uuid}" style="display:none; transform: scale(1.5); margin-right: 15px; cursor:pointer;" onclick="event.stopPropagation(); updateBatchCount();">
+                            <input type="checkbox" class="batch-checkbox" id="cb_${record.uuid}" value="${record.uuid}" style="display:${isBatchMode ? 'inline-block' : 'none'}; transform: scale(1.5); margin-right: 15px; cursor:pointer;" onclick="event.stopPropagation(); updateBatchCount();">
                             <span>👤 ${record.volunteerName}</span>
                         </div>
                         <span class="record-tag">${record.checkType}</span>
@@ -784,15 +786,16 @@ function showSmartCheckInUI(titleText, shiftObj) {
                     <div style="font-size:14px; margin-bottom:12px; background: ${styles.bg}; padding: 12px; border-radius: 8px; border: 1px solid ${styles.border}; display: flex; align-items: center; flex-wrap: wrap; gap: 5px;">
                         <span style="font-weight:bold; color:${styles.text};">🕒 ${timeLabel}：</span> <span style="color:${styles.text}; margin-right: 5px;">${displayDate}</span>
                         <div style="display:flex; align-items:center; gap:3px;">
-                            <select id="hour_${record.uuid}" data-date="${datePart}" style="border: 1px solid ${styles.input}; color: ${styles.input}; font-weight: bold; font-size: 16px; background: white; padding: 4px; border-radius: 6px; cursor: pointer; outline: none;">${getOptions(23, origHour)}</select>
+                            <select id="hour_${record.uuid}" data-date="${datePart}" style="border: 1px solid ${styles.input}; color: ${styles.input}; font-weight: bold; font-size: 16px; background: white; padding: 4px; border-radius: 6px; cursor: pointer; outline: none;">${getOptions(23, paddedHour)}</select>
                             <span style="font-weight:bold; color:${styles.input};">:</span>
-                            <select id="min_${record.uuid}" style="border: 1px solid ${styles.input}; color: ${styles.input}; font-weight: bold; font-size: 16px; background: white; padding: 4px; border-radius: 6px; cursor: pointer; outline: none;">${getOptions(59, origMin)}</select>
+                            <select id="min_${record.uuid}" style="border: 1px solid ${styles.input}; color: ${styles.input}; font-weight: bold; font-size: 16px; background: white; padding: 4px; border-radius: 6px; cursor: pointer; outline: none;">${getOptions(59, paddedMin)}</select>
                         </div>
                     </div>
                     <div style="display:flex; gap:10px; align-items: flex-end; margin-bottom: 10px;">
                         <div style="flex:1.5;">${serviceHtml}</div>
                         ${multiplierExtraHtml}
                     </div>
+                    ${!isSignIn ? `
                     <div style="display:flex; gap:12px; margin-bottom:8px; background:#f8fafc; padding:6px 10px; border-radius:6px; border:1px solid #e2e8f0;">
                         <label style="font-size:13px; font-weight:bold; color:#0284c7; cursor:pointer; display:flex; align-items:center; gap:4px;">
                             <input type="checkbox" id="extAct_${record.uuid}" onchange="updateRecordRemark('${record.uuid}')"> 認列活動時間延長
@@ -800,13 +803,13 @@ function showSmartCheckInUI(titleText, shiftObj) {
                         <label style="font-size:13px; font-weight:bold; color:#d97706; cursor:pointer; display:flex; align-items:center; gap:4px;">
                             <input type="checkbox" id="extLate_${record.uuid}" onchange="updateRecordRemark('${record.uuid}')"> 遲到補班延長
                         </label>
-                    </div>
+                    </div>` : ''}
                     <div style="margin-bottom: 15px;">
                         <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">📝 館員備註：</label>
                         <input type="text" id="rem_${record.uuid}" value="${defaultRem}" placeholder="選填" style="margin:0; padding:8px; width:100%; box-sizing:border-box; border-radius:6px; border:1px solid #ccc;">
                         <input type="hidden" id="shift_${record.uuid}" value="${record.scheduledShiftInfo || ''}">
                     </div>
-                    <button class="approve-btn" id="btnApprove_${record.uuid}" onclick="approveRecord('${record.uuid}')">✅ 確認核准</button>
+                    <button class="approve-btn" id="btnApprove_${record.uuid}" onclick="approveRecord('${record.uuid}')" style="display:${isBatchMode ? 'none' : 'block'};">✅ 確認核准</button>
                 `;
                 return card;
             };
@@ -858,10 +861,11 @@ function showSmartCheckInUI(titleText, shiftObj) {
         function selectGroupForBatch(encodedKey) {
             const key = decodeURIComponent(encodedKey);
             
-            // 📍 若點選已篩選的活動按鈕，則切換回顯示全部活動
+            // 📍 若點選已篩選的活動按鈕，則切換回顯示全部活動，並連帶退出批次模式
             if (activeGroupFilterKey === key) {
                 activeGroupFilterKey = null;
-                renderPendingRecords();
+                if (isBatchMode) toggleBatchMode(); // 連帶退出批次模式
+                else renderPendingRecords();
                 updateBatchCount();
                 return;
             }
