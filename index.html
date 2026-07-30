@@ -1370,6 +1370,11 @@
         }
 
         function buildDynamicServiceOptions() {
+            let baseOptionsHtml = `<option value="活動支援">活動支援</option><option value="五感值班">五感值班</option><option value="創客值班">創客值班</option><option value="導覽">導覽</option>`;
+            if (isCulturalHoursEnabled) {
+                baseOptionsHtml += `<option value="文化時數">文化時數</option>`;
+            }
+
             let optionsHtml = '';
             // 若開放手動打卡，則加入常規選項
             if (isManualCheckInEnabled) {
@@ -1387,7 +1392,7 @@
             }
             const manualSelect = document.getElementById('manualService');
             if (manualSelect) {
-                const currentManualVal = manualSelect.value; manualSelect.innerHTML = optionsHtml;
+                const currentManualVal = manualSelect.value; manualSelect.innerHTML = baseOptionsHtml;
                 if (manualSelect.querySelector(`option[value="${currentManualVal}"]`)) manualSelect.value = currentManualVal;
             }
             const btn = document.getElementById('btnToggleCultural');
