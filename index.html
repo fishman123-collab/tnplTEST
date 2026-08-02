@@ -1013,6 +1013,8 @@
             }).then(res => res.json()).then(result => {
                 if(result.status === "success") { allVolunteerRecords = result.data; renderMonthlyRecords(); } 
                 else alert("載入失敗：" + result.message);
+            }).catch(err => {
+                document.getElementById('monthlyListContainer').innerHTML = `<p style="text-align:center; color:#dc2626; padding:20px;">⚠️ 載入失敗或連線逾時，請重試。</p>`;
             });
         }
 
@@ -1515,7 +1517,11 @@
             }).then(res => res.json()).then(result => {
                 if(result.status === "success") { alert(result.message); toggleBatchMode(); fetchPendingRecords(); } 
                 else { alert("批次核准失敗：" + result.message); btn.disabled = false; btn.innerText = `✅ 送出批次核准 (已選 ${checkboxes.length} 筆)`; }
-            }).catch(err => { alert("網路異常：" + err.message); btn.disabled = false; btn.innerText = `✅ 送出批次核准 (已選 ${checkboxes.length} 筆)`; });
+            }).catch(err => { 
+                alert("⚠️ 批次回應逾時或網路異常，系統將自動刷新清單確認最新狀態。"); 
+                if (btn) { btn.disabled = false; btn.innerText = `✅ 送出批次核准 (已選 ${checkboxes.length} 筆)`; }
+                fetchPendingRecords();
+            });
         }
         
     </script>
