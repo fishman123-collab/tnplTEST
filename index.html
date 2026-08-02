@@ -123,7 +123,7 @@
                 <button id="smartCheckInBtn" style="width: 100%; background: #00B900; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
                     ✅ 沒錯，我要確認 <span id="smartCheckTypeLabel"></span>
                 </button>
-                <button onclick="showManualCheckIn()" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; font-size:14px; margin-top:5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                <button id="switchManualCheckInBtn" onclick="showManualCheckIn()" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; font-size:14px; margin-top:5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                     🔄 切換至手動打卡 (班別不對或臨時支援)
                 </button>
             </div>
@@ -969,7 +969,7 @@
             const extraText = r.extraHours > 0 ? `<span style="color:#059669; font-size:12px; font-weight:bold; background:#d1fae5; padding:2px 6px; border-radius:4px; margin-left:5px;">➕加時 +${r.extraHours}</span>` : "";
             const multiplierText = r.multiplier > 1 ? `<span style="color:#d97706; font-size:12px; font-weight:bold; background:#fef3c7; padding:2px 6px; border-radius:4px; margin-left:5px;">⭐x${r.multiplier}</span>` : "";
             const remarkHtml = r.remark ? `<div style="font-size:13px; color:#888; margin-top:5px; border-top:1px dashed #eee; padding-top:5px;">📝 備註：${r.remark}</div>` : "";
-            const hoursDisplay = r.multiplier > 1 || r.extraHours > 0 ? `<span style="font-size:13px; color:#888; font-weight:normal; margin-bottom:3px; display:block;">(原始 ${r.rawHours.toFixed(2)})</span>${r.finalHours.toFixed(1)} <span style="font-size:12px;">hr</span>` : `${r.finalHours.toFixed(1)} <span style="font-size:12px;">hr</span>`;
+            const hoursDisplay = r.multiplier > 1 || r.extraHours > 0 ? `<span style="font-size:13px; color:#888; font-weight:normal; margin-bottom:3px; display:block;">(原始 ${r.rawHours.toFixed(2)})</span>${r.finalHours.toFixed(2)} <span style="font-size:12px;">hr</span>` : `${r.finalHours.toFixed(2)} <span style="font-size:12px;">hr</span>`;
             let nameHtml = showName ? `<div style="font-weight:bold; font-size:16px; margin-bottom:5px;">👤 ${r.volunteerName}</div>` : "";
             const shiftBadge = r.shiftInfo ? `<div style="font-size:12px; color:#334155; font-weight:bold; background:#f1f5f9; border:1px solid #cbd5e1; display:inline-block; padding:3px 8px; border-radius:10px; margin-bottom:3px;">🗓️ 班別：${r.shiftInfo}</div>` : "";
             const historyHtml = r.punchHistory ? `
@@ -1247,7 +1247,7 @@
             let csvContent = "\uFEFF"; csvContent += "志工姓名,日期,簽到,簽退,服務內容,原始時數,加權,加時,結算時數,確認館員,備註\n";
             filtered.forEach(r => {
                 const safeRemark = r.remark ? r.remark.replace(/"/g, '""') : "";
-                const row = [ r.volunteerName, r.date, r.startTime, r.endTime, r.serviceType, r.rawHours.toFixed(2), r.multiplier, r.extraHours.toFixed(1), r.finalHours.toFixed(1), r.staffName, `"${safeRemark}"` ];
+                const row = [ r.volunteerName, r.date, r.startTime, r.endTime, r.serviceType, r.rawHours.toFixed(2), r.multiplier, r.extraHours.toFixed(1), r.finalHours.toFixed(2), r.staffName, `"${safeRemark}"` ];
                 csvContent += row.join(",") + "\n";
             });
 
@@ -1405,6 +1405,11 @@
             if (btnManual) {
                 if (isManualCheckInEnabled) { btnManual.innerText = "🛑 關閉手動打卡"; btnManual.style.background = "#ffebee"; btnManual.style.color = "#c62828"; } 
                 else { btnManual.innerText = "✋ 開放手動打卡"; btnManual.style.background = "#e8f5e9"; btnManual.style.color = "#2e7d32"; }
+            }
+
+            const switchManualBtn = document.getElementById('switchManualCheckInBtn');
+            if (switchManualBtn) {
+                switchManualBtn.style.display = isManualCheckInEnabled ? 'block' : 'none';
             }
         }
 
