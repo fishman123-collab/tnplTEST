@@ -700,15 +700,19 @@
 
         function fetchPendingRecords() {
             const container = document.getElementById('adminRecordsContainer');
-            container.innerHTML = '<p style="text-align:center; color:gray;">撈取資料中...</p>';
+            container.innerHTML = '<p style="text-align:center; color:gray; margin-top:20px;">撈取資料中...</p>';
             fetch(GAS_URL, {
                 method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify({ action: "getPendingRecords" })
             }).then(res => res.json()).then(result => {
-                if(result.status === "success") {
+                if (result.status === "success") {
                     cachedPendingRecords = result.data || [];
                     renderPendingRecords();
+                } else {
+                    container.innerHTML = `<p style="text-align:center; color:#ff4d4f; font-weight:bold; margin-top:20px;">載入失敗：${result.message}</p>`;
                 }
+            }).catch(err => {
+                container.innerHTML = `<p style="text-align:center; color:#ff4d4f; font-weight:bold; margin-top:20px;">網路連線異常或逾時，請點擊上方按鈕重新整理。</p>`;
             });
         }
 
