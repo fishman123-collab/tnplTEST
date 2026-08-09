@@ -398,6 +398,11 @@
                     }
                     if (result.smartShiftOptions && result.smartShiftOptions.length > 0) {
                         document.getElementById('smartCheckInArea').style.display = 'block';
+                        document.getElementById('manualCheckInArea').style.display = 'none';
+                        const switchBtn = document.getElementById('switchManualCheckInBtn');
+                        if (switchBtn) {
+                            switchBtn.style.display = (result.manualCheckInEnabled || result.culturalHoursEnabled) ? 'block' : 'none';
+                        }
                         renderSmartOptions(result.smartShiftOptions);
                     } else {
                         document.getElementById('smartCheckInArea').style.display = 'none';
