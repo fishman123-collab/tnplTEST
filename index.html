@@ -116,13 +116,7 @@
 
             <!-- 智慧打卡區塊 (簽到與簽退共用) -->
             <div id="smartCheckInArea" class="smart-checkin-box">
-                <div style="font-size: 30px; margin-bottom: 10px;">✨</div>
-                <div id="smartCheckInTitle" style="font-weight: bold; color: #00695c; font-size: 16px; margin-bottom: 10px;">系統偵測到：</div>
-                <div id="smartShiftDetail" style="font-size: 16px; font-weight: bold; color: #d84315; margin-bottom: 15px; background:white; padding:10px; border-radius:8px;"></div>
-                
-                <button id="smartCheckInBtn" style="width: 100%; background: #00B900; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
-                    ✅ 沒錯，我要確認 <span id="smartCheckTypeLabel"></span>
-                </button>
+                <div id="smartOptionsContainer"></div>
                 <button id="switchManualCheckInBtn" onclick="showManualCheckIn()" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; font-size:14px; margin-top:5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                     🔄 切換至手動打卡 (班別不對或臨時支援)
                 </button>
@@ -402,9 +396,9 @@
                             if (signOutRadio) signOutRadio.checked = true;
                         }
                     }
-                    if (result.smartShift) {
-                        currentSmartShift = result.smartShift;
-                        showSmartCheckInUI("系統偵測到您有一筆即將開始的勤務：", currentSmartShift);
+                    if (result.smartShiftOptions && result.smartShiftOptions.length > 0) {
+                        document.getElementById('smartCheckInArea').style.display = 'block';
+                        renderSmartOptions(result.smartShiftOptions);
                     } else {
                         document.getElementById('smartCheckInArea').style.display = 'none';
                         if (result.manualCheckInEnabled || result.culturalHoursEnabled) {
@@ -422,7 +416,7 @@
                             }
                         }
                     }
-                    if (result.smartShift || result.manualCheckInEnabled || result.culturalHoursEnabled) {
+                    if ((result.smartShiftOptions && result.smartShiftOptions.length > 0) || result.manualCheckInEnabled || result.culturalHoursEnabled) {
                         const disabledMsg = document.getElementById('manualCheckInDisabledMsg');
                         if (disabledMsg) disabledMsg.style.display = 'none';
                     }
@@ -499,9 +493,45 @@
             document.getElementById('manualCheckInArea').style.display = 'block';
         }
 
-        document.getElementById('smartCheckInBtn').addEventListener('click', () => {
-            executeCheckIn(currentSmartShift.mappedService, currentSmartShift.expectedCheckType, document.getElementById('smartCheckInBtn'), false, "", "", currentSmartShift.detail);
-        });
+        function renderSmartOptions(optionsList) {
+            const container = document.getElementById('smartOptionsContainer');
+            container.innerHTML = `<div style="font-size: 30px; margin-bottom: 10px;">✨</div>
+                                   <div style="font-weight: bold; color: #00695c; font-size: 16px; margin-bottom: 10px;">系統偵測到您有以下待辦事項：</div>`;
+            
+            optionsList.forEach((opt, index) => {
+                const btnId = `smartOptBtn_${index}`;
+                // Determine style based on checkType
+                const isCheckIn = opt.expectedCheckType === '簽到';
+                const bg = isCheckIn ? '#00B900' : '#f57c00'; // Green for sign-in, Orange for sign-out overwrite
+                const icon = isCheckIn ? '📍' : '👋';
+                
+                const cardHtml = `
+                    <div style="background: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: left;">
+                        <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 6px;">
+                            <span style="font-weight:bold; color:#1e293b; font-size: 15px;">${opt.badge}</span>
+                        </div>
+                        <div style="font-size: 14px; font-weight: bold; color: #d84315; margin-bottom: 12px; line-height:1.4;">
+                            ${opt.detail}
+                        </div>
+                        <button id="${btnId}" style="width: 100%; background: ${bg}; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 3px 5px rgba(0,0,0,0.2);">
+                            ${icon} ${opt.btnTitle}
+                        </button>
+                    </div>
+                `;
+                container.innerHTML += cardHtml;
+            });
+
+            // Add event listeners after rendering
+            optionsList.forEach((opt, index) => {
+                const btn = document.getElementById(`smartOptBtn_${index}`);
+                btn.addEventListener('click', () => {
+                    if (confirm(`⚠️ 請再次確認：\n\n您選擇的是：\n【${opt.expectedCheckType}】\n${opt.detail}\n\n確定要送出嗎？`)) {
+                        executeCheckIn(opt.mappedService, opt.expectedCheckType, btn, false, "", "", opt.detail);
+                    }
+                });
+            });
+        }
+
 
         document.getElementById('checkInBtn').addEventListener('click', () => {
             const serviceType = document.getElementById('serviceSelect').value;
