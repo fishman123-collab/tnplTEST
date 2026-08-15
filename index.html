@@ -202,6 +202,7 @@
                     <button class="refresh-btn" id="btnToggleManualCheckIn" onclick="toggleManualCheckInMode()" style="background:#e8f5e9; color:#2e7d32; font-weight:bold;">✋ 手動打卡</button>
                     <button class="refresh-btn" onclick="openManualEntryUI()" style="background:#fff3e0; color:#e65100; font-weight:bold;">➕ 補登</button>
                     <button class="refresh-btn" onclick="openAdminQueryUI()" style="background:#e0f2f1; color:#00897b; font-weight:bold;">📊 總查詢</button>
+                    <button class="refresh-btn" onclick="openStaffAnomalyUI()" style="background:#fef2f2; color:#dc2626; font-weight:bold;">🚨 缺勤異常</button>
                     <button class="refresh-btn" onclick="fetchPendingRecords()">🔄 重整</button>
                 </div>
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -212,6 +213,20 @@
                 ✅ 送出批次核准 (已選 0 筆)
             </button>
             <div id="adminRecordsContainer"><p style="text-align:center; color:gray;">載入資料中...</p></div>
+        </div>
+
+        <div id="sectionStaffAnomaly" class="section">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                <button onclick="switchSection(document.getElementById('sectionAdmin'))" style="background:none; border:none; font-size:16px; color:var(--primary-color); font-weight:bold; cursor:pointer;">⬅️ 返回審核</button>
+                <h2 style="margin:0; font-size: 18px; color: #dc2626;">🚨 班表缺勤與出勤異常看板</h2>
+            </div>
+            <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 15px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+                    <span style="font-size:13px; color:#64748b;">追蹤歷史所有未結案之排班缺勤與漏卡</span>
+                    <button onclick="fetchStaffAnomalies()" style="background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:13px;">🔄 重新整理</button>
+                </div>
+                <div id="staffAnomalyListContainer"><p style="text-align:center; color:gray; padding:20px;">正在掃描全歷史排班資料 ⏳...</p></div>
+            </div>
         </div>
 
         <div id="sectionAdminQuery" class="section">
@@ -256,9 +271,16 @@
             <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 15px;">
                 <label style="font-weight:bold; display:block; margin-bottom:8px;">👤 選擇志工：</label>
                 <input type="text" id="manualSearchInput" oninput="filterManualVolunteers()" placeholder="可輸入姓名或組別快速過濾..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; margin-bottom:10px; box-sizing:border-box;">
-                <select id="manualVolSelector" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; margin-bottom:15px; font-weight:bold; color:var(--primary-color);"><option value="">-- 資料載入中 --</option></select>
+                <select id="manualVolSelector" onchange="onManualVolOrDateChange()" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; margin-bottom:15px; font-weight:bold; color:var(--primary-color);"><option value="">-- 資料載入中 --</option></select>
+                
                 <label style="font-weight:bold; display:block; margin-bottom:8px;">📅 補登日期：</label>
-                <input type="date" id="manualDate" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; margin-bottom:15px; box-sizing:border-box;">
+                <input type="date" id="manualDate" onchange="onManualVolOrDateChange()" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; margin-bottom:15px; box-sizing:border-box;">
+
+                <label style="font-weight:bold; display:block; margin-bottom:8px;">📌 關聯排班班別 (寫入 O 欄)：</label>
+                <select id="manualShiftSelect" onchange="onManualShiftChange()" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; margin-bottom:15px; font-weight:bold; color:#1e293b;">
+                    <option value="">➕ 臨時非排班支援 (手動輸入服務與備註)</option>
+                </select>
+
                 <label style="font-weight:bold; display:block; margin-bottom:8px;">🕒 補登時間 (24小時制)：</label>
                 <div style="display:flex; align-items:center; gap:5px; margin-bottom:15px;">
                     <select id="manualHour" style="flex:1; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; font-weight:bold;"></select><span style="font-weight:bold;">:</span><select id="manualMin" style="flex:1; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; font-weight:bold;"></select>
@@ -275,7 +297,7 @@
                     <div style="flex:1;"><label style="font-weight:bold; display:block; margin-bottom:8px;">➕ 加時：</label><input type="number" id="manualExtraHours" value="0" step="0.5" min="0" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing:border-box;"></div>
                 </div>
                 <label style="font-weight:bold; display:block; margin-bottom:8px;">📝 備註 (選填)：</label>
-                <input type="text" id="manualRemark" placeholder="例：忘帶手機" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing:border-box;">
+                <input type="text" id="manualRemark" placeholder="例：忘帶手機、環境整理" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; margin-bottom:15px; box-sizing:border-box;">
                 <button onclick="submitManualEntry()" style="width: 100%; background: #00B900; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">✅ 確認補登</button>
             </div>
         </div>
@@ -613,12 +635,15 @@
         */
 
         function executeCheckIn(serviceType, checkType, btnElement, isQuotaRemedy = false, customDateTimeStr = "", customRemark = "", shiftInfo = "", forceOverwrite = false) {
+            if (window.isCheckInSubmitting) return;
+            window.isCheckInSubmitting = true;
+
             const originalText = btnElement.innerHTML;
             const statusMsg = document.getElementById('statusMsg');
-            btnElement.disabled = true; btnElement.innerText = "處理中...";
+            btnElement.disabled = true; btnElement.innerText = "驗證處理中 ⏳...";
 
             const sendCheckInPayload = (lat, lng) => {
-                statusMsg.innerHTML = "資料傳送中...";
+                statusMsg.innerHTML = "資料傳送寫入中 ⏳...";
                 fetch(GAS_URL, {
                     method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, 
                     body: JSON.stringify({ 
@@ -628,6 +653,7 @@
                         shiftInfo: shiftInfo, forceOverwrite: forceOverwrite
                     })
                 }).then(res => res.json()).then(result => {
+                    window.isCheckInSubmitting = false;
                     if (result.status === "confirm_overwrite") {
                         btnElement.disabled = false; btnElement.innerHTML = originalText;
                         if (confirm(result.message)) {
@@ -659,6 +685,7 @@
                     }
                     btnElement.disabled = false; btnElement.innerHTML = originalText;
                 }).catch(err => {
+                    window.isCheckInSubmitting = false;
                     showPopup(false, "網路連線失敗", "連線失敗，請檢查網路設定後再試一次。");
                     btnElement.disabled = false; btnElement.innerHTML = originalText;
                 });
@@ -1340,7 +1367,7 @@
         }
 
         // ==========================================
-        // 館員補登專用邏輯
+        // 館員補登專用邏輯 (含排班班別連動與臨時支援通道)
         // ==========================================
         let manualRoster = [];
         function openManualEntryUI() {
@@ -1350,6 +1377,7 @@
             const getOptions = (max) => { let opts = ''; for(let i=0; i<=max; i++) { let val = i.toString().padStart(2, '0'); opts += `<option value="${val}">${val}</option>`; } return opts; };
             document.getElementById('manualHour').innerHTML = getOptions(23); document.getElementById('manualMin').innerHTML = getOptions(59);
             document.querySelector('input[name="manualCheckType"][value="簽到"]').checked = true; toggleManualInputs();
+            document.getElementById('manualShiftSelect').innerHTML = '<option value="">➕ 臨時非排班支援 (手動輸入服務與備註)</option>';
 
             document.getElementById('manualVolSelector').innerHTML = '<option value="">名單載入中 ⏳...</option>';
             fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "getRoster", userId: currentUserId })
@@ -1387,27 +1415,199 @@
             });
         }
 
+        function onManualVolOrDateChange() {
+            const targetUserId = document.getElementById('manualVolSelector').value;
+            const dateStr = document.getElementById('manualDate').value;
+            const shiftSelect = document.getElementById('manualShiftSelect');
+            if (!targetUserId || !dateStr) {
+                shiftSelect.innerHTML = '<option value="">➕ 臨時非排班支援 (手動輸入服務與備註)</option>';
+                return;
+            }
+
+            shiftSelect.innerHTML = '<option value="">正在查詢當日排班 ⏳...</option>';
+            fetch(GAS_URL, {
+                method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ action: "getVolunteerDayShifts", targetUserId: targetUserId, dateStr: dateStr })
+            }).then(res => res.json()).then(result => {
+                let html = '<option value="">➕ 臨時非排班支援 (手動輸入服務與備註)</option>';
+                if (result.status === "success" && result.shifts && result.shifts.length > 0) {
+                    result.shifts.forEach(shift => {
+                        html += `<option value="${shift}">📌 [預先排班] ${shift}</option>`;
+                    });
+                }
+                shiftSelect.innerHTML = html;
+                if (result.shifts && result.shifts.length === 1) {
+                    shiftSelect.selectedIndex = 1;
+                    onManualShiftChange();
+                }
+            }).catch(() => {
+                shiftSelect.innerHTML = '<option value="">➕ 臨時非排班支援 (手動輸入服務與備註)</option>';
+            });
+        }
+
+        function onManualShiftChange() {
+            const shiftVal = document.getElementById('manualShiftSelect').value;
+            if (!shiftVal) return;
+
+            const serviceSelect = document.getElementById('manualService');
+            if (shiftVal.includes("五感")) {
+                serviceSelect.value = "五感值班";
+            } else if (shiftVal.match(/(創客|3D|雷射|雷雕|縫紉|熱轉印)/)) {
+                serviceSelect.value = "創客值班";
+            } else if (shiftVal.includes("導覽")) {
+                serviceSelect.value = "導覽";
+            } else {
+                serviceSelect.value = "活動支援";
+            }
+
+            // 自動嘗試解析時間
+            const timeMatch = shiftVal.match(/(\d{1,2}:\d{2})[\s\-~]+(\d{1,2}:\d{2})/);
+            if (timeMatch) {
+                const checkType = document.querySelector('input[name="manualCheckType"]:checked').value;
+                const targetTime = checkType === "簽到" ? timeMatch[1] : timeMatch[2];
+                const [h, m] = targetTime.split(':');
+                document.getElementById('manualHour').value = h.padStart(2, '0');
+                document.getElementById('manualMin').value = m.padStart(2, '0');
+            }
+        }
+
         function submitManualEntry() {
+            if (window.isManualSubmitting) return;
+            window.isManualSubmitting = true;
+
             const volSelect = document.getElementById('manualVolSelector'); const targetUserId = volSelect.value;
-            if (!targetUserId) { alert("⚠️ 請先選擇要補登的志工！"); return; }
+            if (!targetUserId) { alert("⚠️ 請先選擇要補登的志工！"); window.isManualSubmitting = false; return; }
             const volunteerName = volSelect.options[volSelect.selectedIndex].getAttribute('data-name');
             const dateStr = document.getElementById('manualDate').value; const hour = document.getElementById('manualHour').value; const min = document.getElementById('manualMin').value;
-            if (!dateStr) { alert("⚠️ 請選擇補登日期！"); return; }
+            if (!dateStr) { alert("⚠️ 請選擇補登日期！"); window.isManualSubmitting = false; return; }
             
             const dateTimeStr = `${dateStr}T${hour}:${min}`; const serviceType = document.getElementById('manualService').value;
             const checkType = document.querySelector('input[name="manualCheckType"]:checked').value;
             const multiplier = document.getElementById('manualMultiplier').value; const extraHours = document.getElementById('manualExtraHours').value;
             const remark = document.getElementById('manualRemark').value;
+            const shiftInfo = document.getElementById('manualShiftSelect').value;
 
-            const btn = event.target; btn.disabled = true; btn.innerText = "資料驗證中 ⏳...";
+            const btn = event ? (event.target || event.srcElement) : null;
+            if (btn) { btn.disabled = true; btn.innerText = "資料驗證中 ⏳..."; }
+
             fetch(GAS_URL, {
                 method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({ action: "manualEntry", userId: currentUserId, targetUserId: targetUserId, volunteerName: volunteerName, dateTimeStr: dateTimeStr, checkType: checkType, serviceType: serviceType, multiplier: multiplier, extraHours: extraHours, remark: remark })
+                body: JSON.stringify({ action: "manualEntry", userId: currentUserId, targetUserId: targetUserId, volunteerName: volunteerName, dateTimeStr: dateTimeStr, checkType: checkType, serviceType: serviceType, multiplier: multiplier, extraHours: extraHours, remark: remark, shiftInfo: shiftInfo })
             }).then(res => res.json()).then(result => {
-                if(result.status === "success") { alert("✅ " + result.message); switchSection(document.getElementById('sectionAdmin')); fetchPendingRecords(); } 
-                else { alert("❌ 補登失敗\n" + result.message); }
-                btn.disabled = false; btn.innerText = "✅ 確認補登";
-            }).catch(err => { alert("網路異常，補登失敗：" + err.message); btn.disabled = false; btn.innerText = "✅ 確認補登"; });
+                window.isManualSubmitting = false;
+                if (btn) { btn.disabled = false; btn.innerText = "✅ 確認補登"; }
+                if(result.status === "success") { 
+                    alert("✅ " + result.message); 
+                    switchSection(document.getElementById('sectionAdmin')); 
+                    fetchPendingRecords(); 
+                } else { 
+                    alert("❌ 補登失敗\n" + result.message); 
+                }
+            }).catch(err => { 
+                window.isManualSubmitting = false;
+                if (btn) { btn.disabled = false; btn.innerText = "✅ 確認補登"; }
+                alert("網路異常，補登失敗：" + err.message); 
+            });
+        }
+
+        // ==========================================
+        // 館員端全歷史排班缺勤與出勤異常看板
+        // ==========================================
+        function openStaffAnomalyUI() {
+            switchSection(document.getElementById('sectionStaffAnomaly'));
+            fetchStaffAnomalies();
+        }
+
+        function fetchStaffAnomalies() {
+            const container = document.getElementById('staffAnomalyListContainer');
+            container.innerHTML = '<p style="text-align:center; color:gray; padding:20px;">正在掃描歷史未結案排班資料 ⏳...</p>';
+            
+            fetch(GAS_URL, {
+                method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ action: "getShiftAttendanceAnomalies", userId: currentUserId })
+            }).then(res => res.json()).then(result => {
+                if (result.status === "success") {
+                    const anomalies = result.data || [];
+                    if (anomalies.length === 0) {
+                        container.innerHTML = `
+                            <div style="text-align:center; padding:35px 20px; color:#166534; background:#f0fdf4; border-radius:12px; border:1px solid #bbf7d0;">
+                                <div style="font-size:40px; margin-bottom:10px;">🎉</div>
+                                <div style="font-weight:bold; font-size:16px;">太棒了！目前全歷史無任何未結案的缺勤或漏卡異常。</div>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    let html = `<div style="font-size:13px; color:#dc2626; font-weight:bold; margin-bottom:12px;">🚨 共有 ${anomalies.length} 筆未結案之排班出勤異常：</div>`;
+                    anomalies.forEach((a) => {
+                        const jsonStr = encodeURIComponent(JSON.stringify(a));
+                        html += `
+                            <div style="background:#fff; border:1px solid #fee2e2; border-left:5px solid #dc2626; border-radius:10px; padding:12px; margin-bottom:12px; box-shadow:0 2px 4px rgba(0,0,0,0.04);">
+                                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                                    <div style="font-weight:bold; font-size:16px; color:#1e293b;">👤 ${a.volunteerName}</div>
+                                    <span style="background:#fee2e2; color:#dc2626; padding:3px 8px; border-radius:12px; font-size:12px; font-weight:bold;">${a.issue}</span>
+                                </div>
+                                <div style="font-size:13px; color:#475569; margin-bottom:4px;"><b>📅 排班日期：</b>${a.date} (${a.startTime} ~ ${a.endTime})</div>
+                                <div style="font-size:13px; color:#475569; margin-bottom:8px;"><b>🎪 班別資訊：</b>${a.shiftDetail}</div>
+                                <div style="display:flex; justify-content:flex-end;">
+                                    <button onclick="openManualEntryForAnomaly('${jsonStr}')" style="background:#2563eb; color:white; border:none; padding:6px 14px; border-radius:6px; font-weight:bold; font-size:13px; cursor:pointer;">✍️ 為他補登</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = `<div style="color:red; text-align:center; padding:20px;">載入失敗：${result.message}</div>`;
+                }
+            }).catch(err => {
+                container.innerHTML = `<div style="color:red; text-align:center; padding:20px;">連線失敗：${err.message}</div>`;
+            });
+        }
+
+        function openManualEntryForAnomaly(encodedJson) {
+            const anomaly = JSON.parse(decodeURIComponent(encodedJson));
+            openManualEntryUI();
+            
+            setTimeout(() => {
+                const volSelect = document.getElementById('manualVolSelector');
+                volSelect.value = anomaly.userId;
+                document.getElementById('manualDate').value = anomaly.date;
+                
+                // 設定時間
+                if (anomaly.issue.includes("簽退")) {
+                    const rRadio = document.querySelector('input[name="manualCheckType"][value="簽退"]');
+                    if (rRadio) rRadio.checked = true;
+                    if (anomaly.endTime) {
+                        const [h, m] = anomaly.endTime.split(':');
+                        document.getElementById('manualHour').value = h.padStart(2, '0');
+                        document.getElementById('manualMin').value = m.padStart(2, '0');
+                    }
+                } else {
+                    const rRadio = document.querySelector('input[name="manualCheckType"][value="簽到"]');
+                    if (rRadio) rRadio.checked = true;
+                    if (anomaly.startTime) {
+                        const [h, m] = anomaly.startTime.split(':');
+                        document.getElementById('manualHour').value = h.padStart(2, '0');
+                        document.getElementById('manualMin').value = m.padStart(2, '0');
+                    }
+                }
+                toggleManualInputs();
+
+                // 抓取並設定班別
+                onManualVolOrDateChange();
+                setTimeout(() => {
+                    const shiftSelect = document.getElementById('manualShiftSelect');
+                    if (shiftSelect) {
+                        for (let i = 0; i < shiftSelect.options.length; i++) {
+                            if (shiftSelect.options[i].value === anomaly.shiftDetail || (anomaly.activityName && shiftSelect.options[i].text.includes(anomaly.activityName))) {
+                                shiftSelect.selectedIndex = i;
+                                break;
+                            }
+                        }
+                        onManualShiftChange();
+                    }
+                }, 600);
+            }, 300);
         }
 
         function buildDynamicServiceOptions() {
