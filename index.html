@@ -1406,6 +1406,12 @@
             document.getElementById('manualFullSignOutHour').innerHTML = getOptions(23);
             document.getElementById('manualFullSignOutMin').innerHTML = getOptions(59);
 
+            // 每次開啟補登介面時，徹底重置欄位（防呆：避免殘留上一位志工的備註/加權）
+            document.getElementById('manualRemark').value = "";
+            document.getElementById('manualMultiplier').value = "1";
+            document.getElementById('manualExtraHours').value = "0";
+            document.getElementById('manualSearchInput').value = "";
+
             const rDefault = document.querySelector('input[name="manualCheckType"][value="簽到"]');
             if (rDefault) rDefault.checked = true;
             toggleManualInputs();
@@ -1544,6 +1550,19 @@
                     const [h, m] = timeMatch[1].split(':');
                     document.getElementById('manualHour').value = h.padStart(2, '0');
                     document.getElementById('manualMin').value = m.padStart(2, '0');
+                }
+
+                // 🌟 智慧判定：五感平日最後一班自動帶入 +0.5h 加時與備註
+                const dateStr = document.getElementById('manualDate').value;
+                if (dateStr && shiftVal.includes("五感")) {
+                    const dateObj = new Date(dateStr.replace(/-/g, '/'));
+                    const dayOfWeek = dateObj.getDay(); // 0: 週日, 1-5: 週一至週五, 6: 週六
+                    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                        if (shiftVal.includes("14:30") || shiftVal.includes("17:30") || shiftVal.includes("16:45") || shiftVal.includes("13:45")) {
+                            document.getElementById('manualExtraHours').value = "0.5";
+                            document.getElementById('manualRemark').value = "平日第四段班+0.5h";
+                        }
+                    }
                 }
             }
         }
