@@ -281,24 +281,47 @@
                     <option value="">➕ 臨時非排班支援 (手動輸入服務與備註)</option>
                 </select>
 
-                <label style="font-weight:bold; display:block; margin-bottom:8px;">🕒 補登時間 (24小時制)：</label>
-                <div style="display:flex; align-items:center; gap:5px; margin-bottom:15px;">
-                    <select id="manualHour" style="flex:1; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; font-weight:bold;"></select><span style="font-weight:bold;">:</span><select id="manualMin" style="flex:1; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; font-weight:bold;"></select>
+                <label style="font-weight:bold; display:block; margin-bottom:8px;">⏱️ 補登模式：</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; padding: 10px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <label style="font-weight:bold; color:#2563eb; cursor:pointer;"><input type="radio" name="manualCheckType" value="整班補登" onchange="toggleManualInputs()"> 🚀 整班補登 (簽到＋簽退)</label>
+                    <label style="font-weight:bold; cursor:pointer;"><input type="radio" name="manualCheckType" value="簽到" checked onchange="toggleManualInputs()"> 簽到</label>
+                    <label style="font-weight:bold; cursor:pointer;"><input type="radio" name="manualCheckType" value="簽退" onchange="toggleManualInputs()"> 簽退</label>
                 </div>
+
+                <!-- 單一時間 (簽到或簽退模式) -->
+                <div id="manualSingleTimeWrapper">
+                    <label id="manualSingleTimeLabel" style="font-weight:bold; display:block; margin-bottom:8px;">🕒 補登時間 (24小時制)：</label>
+                    <div style="display:flex; align-items:center; gap:5px; margin-bottom:15px;">
+                        <select id="manualHour" style="flex:1; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; font-weight:bold;"></select><span style="font-weight:bold;">:</span><select id="manualMin" style="flex:1; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; font-weight:bold;"></select>
+                    </div>
+                </div>
+
+                <!-- 雙時間 (整班補登模式) -->
+                <div id="manualDualTimeWrapper" style="display:none;">
+                    <div style="margin-bottom: 15px;">
+                        <label style="font-weight:bold; display:block; margin-bottom:8px; color:#166534;">🟢 簽到時間 (24小時制)：</label>
+                        <div style="display:flex; align-items:center; gap:5px;">
+                            <select id="manualFullSignInHour" style="flex:1; padding: 10px; border-radius: 8px; border: 1px solid #86efac; background:#f0fdf4; font-size: 16px; font-weight:bold;"></select><span style="font-weight:bold;">:</span><select id="manualFullSignInMin" style="flex:1; padding: 10px; border-radius: 8px; border: 1px solid #86efac; background:#f0fdf4; font-size: 16px; font-weight:bold;"></select>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="font-weight:bold; display:block; margin-bottom:8px; color:#991b1b;">🔴 簽退時間 (24小時制)：</label>
+                        <div style="display:flex; align-items:center; gap:5px;">
+                            <select id="manualFullSignOutHour" style="flex:1; padding: 10px; border-radius: 8px; border: 1px solid #fca5a5; background:#fef2f2; font-size: 16px; font-weight:bold;"></select><span style="font-weight:bold;">:</span><select id="manualFullSignOutMin" style="flex:1; padding: 10px; border-radius: 8px; border: 1px solid #fca5a5; background:#fef2f2; font-size: 16px; font-weight:bold;"></select>
+                        </div>
+                    </div>
+                </div>
+
                 <label style="font-weight:bold; display:block; margin-bottom:8px;">📋 服務內容：</label>
                 <select id="manualService" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; margin-bottom:15px;"></select>
-                <label style="font-weight:bold; display:block; margin-bottom:8px;">⏱️ 打卡狀態：</label>
-                <div style="display: flex; gap: 20px; margin-bottom: 15px;">
-                    <label><input type="radio" name="manualCheckType" value="簽到" checked onchange="toggleManualInputs()"> 簽到</label>
-                    <label><input type="radio" name="manualCheckType" value="簽退" onchange="toggleManualInputs()"> 簽退</label>
-                </div>
+
                 <div style="display:flex; gap:10px; margin-bottom:15px;">
                     <div style="flex:1;"><label style="font-weight:bold; display:block; margin-bottom:8px;">⭐ 加權：</label><input type="number" id="manualMultiplier" value="1" step="0.5" min="1" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing:border-box;"></div>
                     <div style="flex:1;"><label style="font-weight:bold; display:block; margin-bottom:8px;">➕ 加時：</label><input type="number" id="manualExtraHours" value="0" step="0.5" min="0" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing:border-box;"></div>
                 </div>
                 <label style="font-weight:bold; display:block; margin-bottom:8px;">📝 備註 (選填)：</label>
                 <input type="text" id="manualRemark" placeholder="例：忘帶手機、環境整理" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; margin-bottom:15px; box-sizing:border-box;">
-                <button onclick="submitManualEntry()" style="width: 100%; background: #00B900; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">✅ 確認補登</button>
+                <button id="manualSubmitBtn" onclick="submitManualEntry()" style="width: 100%; background: #00B900; color: white; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow:0 4px 6px rgba(0,0,0,0.1);">✅ 確認補登</button>
             </div>
         </div>
     </div>
@@ -1370,34 +1393,75 @@
         // 館員補登專用邏輯 (含排班班別連動與臨時支援通道)
         // ==========================================
         let manualRoster = [];
-        function openManualEntryUI() {
+        function openManualEntryUI(onReadyCallback) {
             switchSection(document.getElementById('sectionManualEntry'));
             const today = new Date(); const yyyy = today.getFullYear(); const mm = String(today.getMonth() + 1).padStart(2, '0'); const dd = String(today.getDate()).padStart(2, '0');
             document.getElementById('manualDate').value = `${yyyy}-${mm}-${dd}`;
             const getOptions = (max) => { let opts = ''; for(let i=0; i<=max; i++) { let val = i.toString().padStart(2, '0'); opts += `<option value="${val}">${val}</option>`; } return opts; };
-            document.getElementById('manualHour').innerHTML = getOptions(23); document.getElementById('manualMin').innerHTML = getOptions(59);
-            document.querySelector('input[name="manualCheckType"][value="簽到"]').checked = true; toggleManualInputs();
+            
+            document.getElementById('manualHour').innerHTML = getOptions(23); 
+            document.getElementById('manualMin').innerHTML = getOptions(59);
+            document.getElementById('manualFullSignInHour').innerHTML = getOptions(23);
+            document.getElementById('manualFullSignInMin').innerHTML = getOptions(59);
+            document.getElementById('manualFullSignOutHour').innerHTML = getOptions(23);
+            document.getElementById('manualFullSignOutMin').innerHTML = getOptions(59);
+
+            const rDefault = document.querySelector('input[name="manualCheckType"][value="簽到"]');
+            if (rDefault) rDefault.checked = true;
+            toggleManualInputs();
             document.getElementById('manualShiftSelect').innerHTML = '<option value="">➕ 臨時非排班支援 (手動輸入服務與備註)</option>';
 
-            document.getElementById('manualVolSelector').innerHTML = '<option value="">名單載入中 ⏳...</option>';
-            fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "getRoster", userId: currentUserId })
-            }).then(res => res.json()).then(result => {
-                if(result.status === "success") { manualRoster = result.roster; filterManualVolunteers(); } 
-                else alert("權限不足或載入失敗：" + result.message);
-            }).catch(err => alert("載入失敗：" + err.message));
+            if (manualRoster && manualRoster.length > 0) {
+                filterManualVolunteers();
+                if (typeof onReadyCallback === "function") onReadyCallback();
+            } else {
+                document.getElementById('manualVolSelector').innerHTML = '<option value="">名單載入中 ⏳...</option>';
+                fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "getRoster", userId: currentUserId })
+                }).then(res => res.json()).then(result => {
+                    if(result.status === "success") { 
+                        manualRoster = result.roster; 
+                        filterManualVolunteers(); 
+                        if (typeof onReadyCallback === "function") onReadyCallback();
+                    } 
+                    else alert("權限不足或載入失敗：" + result.message);
+                }).catch(err => alert("載入失敗：" + err.message));
+            }
         }
 
         function toggleManualInputs() {
-            const checkType = document.querySelector('input[name="manualCheckType"]:checked').value;
-            const serviceSelect = document.getElementById('manualService'); const multiplierInput = document.getElementById('manualMultiplier'); const extraHoursInput = document.getElementById('manualExtraHours');
-            if (checkType === "簽退") {
-                serviceSelect.disabled = true; serviceSelect.style.backgroundColor = "#f5f5f5";
-                multiplierInput.disabled = true; multiplierInput.value = 1; multiplierInput.style.backgroundColor = "#f5f5f5";
-                extraHoursInput.disabled = true; extraHoursInput.value = 0; extraHoursInput.style.backgroundColor = "#f5f5f5";
-            } else {
+            const checkTypeRadio = document.querySelector('input[name="manualCheckType"]:checked');
+            const checkType = checkTypeRadio ? checkTypeRadio.value : "簽到";
+            const serviceSelect = document.getElementById('manualService'); 
+            const multiplierInput = document.getElementById('manualMultiplier'); 
+            const extraHoursInput = document.getElementById('manualExtraHours');
+            const singleTimeWrapper = document.getElementById('manualSingleTimeWrapper');
+            const dualTimeWrapper = document.getElementById('manualDualTimeWrapper');
+            const submitBtn = document.getElementById('manualSubmitBtn');
+
+            if (checkType === "整班補登") {
+                if (singleTimeWrapper) singleTimeWrapper.style.display = "none";
+                if (dualTimeWrapper) dualTimeWrapper.style.display = "block";
                 serviceSelect.disabled = false; serviceSelect.style.backgroundColor = "white";
                 multiplierInput.disabled = false; multiplierInput.style.backgroundColor = "white";
                 extraHoursInput.disabled = false; extraHoursInput.style.backgroundColor = "white";
+                if (submitBtn) submitBtn.innerText = "🚀 一鍵完成整班補登 (簽到＋簽退)";
+            } else if (checkType === "簽退") {
+                if (singleTimeWrapper) singleTimeWrapper.style.display = "block";
+                if (dualTimeWrapper) dualTimeWrapper.style.display = "none";
+                document.getElementById('manualSingleTimeLabel').innerText = "🕒 簽退時間 (24小時制)：";
+                serviceSelect.disabled = true; serviceSelect.style.backgroundColor = "#f5f5f5";
+                multiplierInput.disabled = true; multiplierInput.value = 1; multiplierInput.style.backgroundColor = "#f5f5f5";
+                extraHoursInput.disabled = true; extraHoursInput.value = 0; extraHoursInput.style.backgroundColor = "#f5f5f5";
+                if (submitBtn) submitBtn.innerText = "✅ 確認補登簽退";
+            } else {
+                // 簽到
+                if (singleTimeWrapper) singleTimeWrapper.style.display = "block";
+                if (dualTimeWrapper) dualTimeWrapper.style.display = "none";
+                document.getElementById('manualSingleTimeLabel').innerText = "🕒 簽到時間 (24小時制)：";
+                serviceSelect.disabled = false; serviceSelect.style.backgroundColor = "white";
+                multiplierInput.disabled = false; multiplierInput.style.backgroundColor = "white";
+                extraHoursInput.disabled = false; extraHoursInput.style.backgroundColor = "white";
+                if (submitBtn) submitBtn.innerText = "✅ 確認補登簽到";
             }
         }
 
@@ -1463,11 +1527,24 @@
             // 自動嘗試解析時間
             const timeMatch = shiftVal.match(/(\d{1,2}:\d{2})[\s\-~]+(\d{1,2}:\d{2})/);
             if (timeMatch) {
-                const checkType = document.querySelector('input[name="manualCheckType"]:checked').value;
-                const targetTime = checkType === "簽到" ? timeMatch[1] : timeMatch[2];
-                const [h, m] = targetTime.split(':');
-                document.getElementById('manualHour').value = h.padStart(2, '0');
-                document.getElementById('manualMin').value = m.padStart(2, '0');
+                const checkTypeRadio = document.querySelector('input[name="manualCheckType"]:checked');
+                const checkType = checkTypeRadio ? checkTypeRadio.value : "簽到";
+                if (checkType === "整班補登") {
+                    const [inH, inM] = timeMatch[1].split(':');
+                    const [outH, outM] = timeMatch[2].split(':');
+                    document.getElementById('manualFullSignInHour').value = inH.padStart(2, '0');
+                    document.getElementById('manualFullSignInMin').value = inM.padStart(2, '0');
+                    document.getElementById('manualFullSignOutHour').value = outH.padStart(2, '0');
+                    document.getElementById('manualFullSignOutMin').value = outM.padStart(2, '0');
+                } else if (checkType === "簽退") {
+                    const [h, m] = timeMatch[2].split(':');
+                    document.getElementById('manualHour').value = h.padStart(2, '0');
+                    document.getElementById('manualMin').value = m.padStart(2, '0');
+                } else {
+                    const [h, m] = timeMatch[1].split(':');
+                    document.getElementById('manualHour').value = h.padStart(2, '0');
+                    document.getElementById('manualMin').value = m.padStart(2, '0');
+                }
             }
         }
 
@@ -1478,24 +1555,52 @@
             const volSelect = document.getElementById('manualVolSelector'); const targetUserId = volSelect.value;
             if (!targetUserId) { alert("⚠️ 請先選擇要補登的志工！"); window.isManualSubmitting = false; return; }
             const volunteerName = volSelect.options[volSelect.selectedIndex].getAttribute('data-name');
-            const dateStr = document.getElementById('manualDate').value; const hour = document.getElementById('manualHour').value; const min = document.getElementById('manualMin').value;
+            const dateStr = document.getElementById('manualDate').value;
             if (!dateStr) { alert("⚠️ 請選擇補登日期！"); window.isManualSubmitting = false; return; }
             
-            const dateTimeStr = `${dateStr}T${hour}:${min}`; const serviceType = document.getElementById('manualService').value;
-            const checkType = document.querySelector('input[name="manualCheckType"]:checked').value;
-            const multiplier = document.getElementById('manualMultiplier').value; const extraHours = document.getElementById('manualExtraHours').value;
+            const checkTypeRadio = document.querySelector('input[name="manualCheckType"]:checked');
+            const checkType = checkTypeRadio ? checkTypeRadio.value : "簽到";
+            const serviceType = document.getElementById('manualService').value;
+            const multiplier = document.getElementById('manualMultiplier').value; 
+            const extraHours = document.getElementById('manualExtraHours').value;
             const remark = document.getElementById('manualRemark').value;
             const shiftInfo = document.getElementById('manualShiftSelect').value;
 
-            const btn = event ? (event.target || event.srcElement) : null;
-            if (btn) { btn.disabled = true; btn.innerText = "資料驗證中 ⏳..."; }
+            let payload = {
+                action: "manualEntry",
+                userId: currentUserId,
+                targetUserId: targetUserId,
+                volunteerName: volunteerName,
+                checkType: checkType,
+                serviceType: serviceType,
+                multiplier: multiplier,
+                extraHours: extraHours,
+                remark: remark,
+                shiftInfo: shiftInfo
+            };
+
+            if (checkType === "整班補登") {
+                const inHour = document.getElementById('manualFullSignInHour').value;
+                const inMin = document.getElementById('manualFullSignInMin').value;
+                const outHour = document.getElementById('manualFullSignOutHour').value;
+                const outMin = document.getElementById('manualFullSignOutMin').value;
+                payload.signInDateTimeStr = `${dateStr}T${inHour}:${inMin}`;
+                payload.signOutDateTimeStr = `${dateStr}T${outHour}:${outMin}`;
+            } else {
+                const hour = document.getElementById('manualHour').value;
+                const min = document.getElementById('manualMin').value;
+                payload.dateTimeStr = `${dateStr}T${hour}:${min}`;
+            }
+
+            const btn = document.getElementById('manualSubmitBtn');
+            if (btn) { btn.disabled = true; btn.innerText = "資料寫入中 ⏳..."; }
 
             fetch(GAS_URL, {
                 method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({ action: "manualEntry", userId: currentUserId, targetUserId: targetUserId, volunteerName: volunteerName, dateTimeStr: dateTimeStr, checkType: checkType, serviceType: serviceType, multiplier: multiplier, extraHours: extraHours, remark: remark, shiftInfo: shiftInfo })
+                body: JSON.stringify(payload)
             }).then(res => res.json()).then(result => {
                 window.isManualSubmitting = false;
-                if (btn) { btn.disabled = false; btn.innerText = "✅ 確認補登"; }
+                if (btn) { btn.disabled = false; toggleManualInputs(); }
                 if(result.status === "success") { 
                     alert("✅ " + result.message); 
                     switchSection(document.getElementById('sectionAdmin')); 
@@ -1505,7 +1610,7 @@
                 }
             }).catch(err => { 
                 window.isManualSubmitting = false;
-                if (btn) { btn.disabled = false; btn.innerText = "✅ 確認補登"; }
+                if (btn) { btn.disabled = false; toggleManualInputs(); }
                 alert("網路異常，補登失敗：" + err.message); 
             });
         }
@@ -1566,15 +1671,35 @@
 
         function openManualEntryForAnomaly(encodedJson) {
             const anomaly = JSON.parse(decodeURIComponent(encodedJson));
-            openManualEntryUI();
             
-            setTimeout(() => {
+            openManualEntryUI(() => {
+                // 1. 100% 準確選中志工 (支援姓名或 LINE ID 比對)
                 const volSelect = document.getElementById('manualVolSelector');
-                volSelect.value = anomaly.userId;
-                document.getElementById('manualDate').value = anomaly.date;
+                for (let i = 0; i < volSelect.options.length; i++) {
+                    if (volSelect.options[i].value === anomaly.userId || volSelect.options[i].getAttribute('data-name') === anomaly.volunteerName) {
+                        volSelect.selectedIndex = i;
+                        break;
+                    }
+                }
                 
-                // 設定時間
-                if (anomaly.issue.includes("簽退")) {
+                // 2. 設定日期
+                document.getElementById('manualDate').value = anomaly.date;
+
+                // 3. 根據異常類型自動鎖定補登模式與時間
+                if (anomaly.issue.includes("整班未打卡")) {
+                    const rFull = document.querySelector('input[name="manualCheckType"][value="整班補登"]');
+                    if (rFull) rFull.checked = true;
+                    if (anomaly.startTime) {
+                        const [h, m] = anomaly.startTime.split(':');
+                        document.getElementById('manualFullSignInHour').value = h.padStart(2, '0');
+                        document.getElementById('manualFullSignInMin').value = m.padStart(2, '0');
+                    }
+                    if (anomaly.endTime) {
+                        const [h, m] = anomaly.endTime.split(':');
+                        document.getElementById('manualFullSignOutHour').value = h.padStart(2, '0');
+                        document.getElementById('manualFullSignOutMin').value = m.padStart(2, '0');
+                    }
+                } else if (anomaly.issue.includes("未完成簽退")) {
                     const rRadio = document.querySelector('input[name="manualCheckType"][value="簽退"]');
                     if (rRadio) rRadio.checked = true;
                     if (anomaly.endTime) {
@@ -1583,6 +1708,7 @@
                         document.getElementById('manualMin').value = m.padStart(2, '0');
                     }
                 } else {
+                    // 未完成簽到
                     const rRadio = document.querySelector('input[name="manualCheckType"][value="簽到"]');
                     if (rRadio) rRadio.checked = true;
                     if (anomaly.startTime) {
@@ -1593,21 +1719,15 @@
                 }
                 toggleManualInputs();
 
-                // 抓取並設定班別
-                onManualVolOrDateChange();
-                setTimeout(() => {
-                    const shiftSelect = document.getElementById('manualShiftSelect');
-                    if (shiftSelect) {
-                        for (let i = 0; i < shiftSelect.options.length; i++) {
-                            if (shiftSelect.options[i].value === anomaly.shiftDetail || (anomaly.activityName && shiftSelect.options[i].text.includes(anomaly.activityName))) {
-                                shiftSelect.selectedIndex = i;
-                                break;
-                            }
-                        }
-                        onManualShiftChange();
-                    }
-                }, 600);
-            }, 300);
+                // 4. 即時注入排班選項並選中 (不需要等網路查詢，秒帶入)
+                const shiftSelect = document.getElementById('manualShiftSelect');
+                shiftSelect.innerHTML = `
+                    <option value="${anomaly.shiftDetail}">📌 [預先排班] ${anomaly.shiftDetail}</option>
+                    <option value="">➕ 臨時非排班支援 (手動輸入服務與備註)</option>
+                `;
+                shiftSelect.selectedIndex = 0;
+                onManualShiftChange();
+            });
         }
 
         function buildDynamicServiceOptions() {
