@@ -203,6 +203,7 @@
                     <button class="refresh-btn" onclick="openManualEntryUI()" style="background:#fff3e0; color:#e65100; font-weight:bold;">➕ 補登</button>
                     <button class="refresh-btn" onclick="openAdminQueryUI()" style="background:#e0f2f1; color:#00897b; font-weight:bold;">📊 總查詢</button>
                     <button class="refresh-btn" onclick="openStaffAnomalyUI()" style="background:#fef2f2; color:#dc2626; font-weight:bold;">🚨 缺勤異常</button>
+                    <button class="refresh-btn" onclick="clearSystemCacheUI()" style="background:#f1f5f9; color:#475569; font-weight:bold;">⚡ 重置快取</button>
                     <button class="refresh-btn" onclick="fetchPendingRecords()">🔄 重整</button>
                 </div>
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -1815,6 +1816,32 @@
                     buildDynamicServiceOptions(); 
                 }
             }).catch(err => { alert("網路異常：" + err.message); buildDynamicServiceOptions(); });
+        }
+
+        function clearSystemCacheUI() {
+            if (!confirm("⚠️ 確定要重置全系統名冊快取嗎？\n\n當您在試算表手動新增了志工、調整了組別或更動了權限時，執行此操作可讓所有名冊異動「立即生效」！")) return;
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "重置中 ⏳...";
+            btn.disabled = true;
+            fetch(GAS_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ action: "clearSystemCache", userId: currentUserId })
+            }).then(res => res.json()).then(result => {
+                btn.innerText = originalText;
+                btn.disabled = false;
+                if (result.status === "success") {
+                    alert(result.message);
+                    checkBindingStatus();
+                } else {
+                    alert("❌ 操作失敗：" + result.message);
+                }
+            }).catch(err => {
+                btn.innerText = originalText;
+                btn.disabled = false;
+                alert("網路異常：" + err.message);
+            });
         }
 
         // ==========================================
