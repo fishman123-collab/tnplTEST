@@ -1531,37 +1531,48 @@
                 serviceSelect.value = "活動支援";
             }
 
-            // 自動嘗試解析時間
-            const timeMatch = shiftVal.match(/(\d{1,2}:\d{2})[\s\-~]+(\d{1,2}:\d{2})/);
-            if (timeMatch) {
+            // 自動嘗試解析時間 (支援單班與連班合併字串，取最前起始與最後結束)
+            const allTimes = shiftVal.match(/(\d{1,2}:\d{2})/g);
+            if (allTimes && allTimes.length >= 2) {
+                const startTimeStr = allTimes[0];
+                const endTimeStr = allTimes[allTimes.length - 1];
                 const checkTypeRadio = document.querySelector('input[name="manualCheckType"]:checked');
                 const checkType = checkTypeRadio ? checkTypeRadio.value : "簽到";
                 if (checkType === "整班補登") {
-                    const [inH, inM] = timeMatch[1].split(':');
-                    const [outH, outM] = timeMatch[2].split(':');
+                    const [inH, inM] = startTimeStr.split(':');
+                    const [outH, outM] = endTimeStr.split(':');
                     document.getElementById('manualFullSignInHour').value = inH.padStart(2, '0');
                     document.getElementById('manualFullSignInMin').value = inM.padStart(2, '0');
                     document.getElementById('manualFullSignOutHour').value = outH.padStart(2, '0');
                     document.getElementById('manualFullSignOutMin').value = outM.padStart(2, '0');
                 } else if (checkType === "簽退") {
-                    const [h, m] = timeMatch[2].split(':');
+                    const [h, m] = endTimeStr.split(':');
                     document.getElementById('manualHour').value = h.padStart(2, '0');
                     document.getElementById('manualMin').value = m.padStart(2, '0');
                 } else {
-                    const [h, m] = timeMatch[1].split(':');
+                    const [h, m] = startTimeStr.split(':');
                     document.getElementById('manualHour').value = h.padStart(2, '0');
                     document.getElementById('manualMin').value = m.padStart(2, '0');
                 }
 
-                // 🌟 智慧判定：五感平日最後一班自動帶入 +0.5h 加時與備註
+                // 🌟 智慧判定：五感假日 1.5 倍 / 平日最後一班自動帶入 +0.5h 加時與備註
                 const dateStr = document.getElementById('manualDate').value;
                 if (dateStr && shiftVal.includes("五感")) {
                     const dateObj = new Date(dateStr.replace(/-/g, '/'));
                     const dayOfWeek = dateObj.getDay(); // 0: 週日, 1-5: 週一至週五, 6: 週六
-                    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-                        if (shiftVal.includes("14:30") || shiftVal.includes("17:30") || shiftVal.includes("16:45") || shiftVal.includes("13:45")) {
+                    if (dayOfWeek === 0 || dayOfWeek === 6) {
+                        document.getElementById('manualMultiplier').value = "1.5";
+                        document.getElementById('manualExtraHours').value = "0";
+                        document.getElementById('manualRemark').value = "五感假日1.5倍";
+                    } else if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                        if (shiftVal.includes("17:30") || shiftVal.includes("14:30")) {
+                            document.getElementById('manualMultiplier').value = "1";
                             document.getElementById('manualExtraHours').value = "0.5";
-                            document.getElementById('manualRemark').value = "平日第四段班+0.5h";
+                            if (shiftVal.includes("13:45") || shiftVal.includes("16:45")) {
+                                document.getElementById('manualRemark').value = "平日第四段班+0.5h，(連上第三、四段)";
+                            } else {
+                                document.getElementById('manualRemark').value = "平日第四段班+0.5h";
+                            }
                         }
                     }
                 }
