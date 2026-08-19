@@ -551,20 +551,24 @@
             
             optionsList.forEach((opt, index) => {
                 const btnId = `smartOptBtn_${index}`;
-                // Determine style based on checkType
                 const isCheckIn = opt.expectedCheckType === '簽到';
-                const bg = isCheckIn ? '#00B900' : '#f57c00'; // Green for sign-in, Orange for sign-out overwrite
+                const isUpdate = opt.badge === '可更新簽退' || opt.btnTitle.includes('更新');
+                const bg = isCheckIn ? '#00B900' : (isUpdate ? '#ea580c' : '#dc2626');
                 const icon = isCheckIn ? '📍' : '👋';
                 
+                let badgeStyle = "background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0;";
+                if (opt.badge === '進行中勤務') badgeStyle = "background:#fef2f2; color:#dc2626; border:1px solid #fecaca;";
+                else if (isUpdate) badgeStyle = "background:#fff7ed; color:#ea580c; border:1px solid #fed7aa;";
+
                 const cardHtml = `
-                    <div style="background: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: left;">
-                        <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 6px;">
-                            <span style="font-weight:bold; color:#1e293b; font-size: 15px;">${opt.badge}</span>
+                    <div style="background: white; padding: 14px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 5px rgba(0,0,0,0.06); text-align: left;">
+                        <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 8px;">
+                            <span style="font-weight:bold; font-size: 13px; padding: 3px 8px; border-radius: 6px; ${badgeStyle}">${opt.badge}</span>
                         </div>
-                        <div style="font-size: 14px; font-weight: bold; color: #d84315; margin-bottom: 12px; line-height:1.4;">
+                        <div style="font-size: 15px; font-weight: bold; color: #1e293b; margin-bottom: 12px; line-height:1.4;">
                             ${opt.detail}
                         </div>
-                        <button id="${btnId}" style="width: 100%; background: ${bg}; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 3px 5px rgba(0,0,0,0.2);">
+                        <button id="${btnId}" style="width: 100%; background: ${bg}; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 3px 5px rgba(0,0,0,0.15);">
                             ${icon} ${opt.btnTitle}
                         </button>
                     </div>
@@ -1339,7 +1343,10 @@
             let csvContent = "\uFEFF"; csvContent += "志工姓名,日期,簽到,簽退,服務內容,原始時數,加權,加時,結算時數,確認館員,備註\n";
             filtered.forEach(r => {
                 const safeRemark = r.remark ? r.remark.replace(/"/g, '""') : "";
-                const row = [ r.volunteerName, r.date, r.startTime, r.endTime, r.serviceType, r.rawHours.toFixed(2), r.multiplier, r.extraHours.toFixed(1), r.finalHours.toFixed(2), r.staffName, `"${safeRemark}"` ];
+                const safeName = r.volunteerName ? r.volunteerName.replace(/"/g, '""') : "";
+                const safeService = r.serviceType ? r.serviceType.replace(/"/g, '""') : "";
+                const safeStaff = r.staffName ? r.staffName.replace(/"/g, '""') : "";
+                const row = [ `"${safeName}"`, r.date, r.startTime, r.endTime, `"${safeService}"`, r.rawHours.toFixed(2), r.multiplier, r.extraHours.toFixed(1), r.finalHours.toFixed(2), `"${safeStaff}"`, `"${safeRemark}"` ];
                 csvContent += row.join(",") + "\n";
             });
 
@@ -1359,7 +1366,7 @@
             const yearRecords = allAdminQueryRecords.filter(r => r.year === selectedYear);
             const serviceTypes = [...new Set(yearRecords.map(r => r.serviceType))];
             
-            let csvContent = "\uFEFF"; csvContent += `組別,志工姓名,1月,2月,3月,4月,5月,6月,7月,8月,9月,10月,11月,12月,年度總計,${serviceTypes.map(t => t + "總計").join(",")}\n`;
+            let csvContent = "\uFEFF"; csvContent += `組別,志工姓名,1月,2月,3月,4月,5月,6月,7月,8月,9月,10月,11月,12月,年度總計,${serviceTypes.map(t => `"${t.replace(/"/g, '""')}總計"`).join(",")}\n`;
             const nameCounts = {}; globalRoster.forEach(vol => { nameCounts[vol.name] = (nameCounts[vol.name] || 0) + 1; });
 
             let targetRoster = globalRoster;
@@ -1381,7 +1388,12 @@
                 }
                 let displayName = vol.name; if (nameCounts[vol.name] > 1 && vol.phoneTail !== "無") displayName += `(尾數${vol.phoneTail})`;
                 const typeValues = serviceTypes.map(t => typeTotals[t].toFixed(1));
-                const row = [vol.group, displayName, ...monthlyHours.map(h => h.toFixed(1)), yearlyTotal.toFixed(1), ...typeValues];
+                
+                // 📍 關鍵防呆：使用雙引號 "" 包覆組別與姓名，確保複數組別（含逗號 ,）100% 完整保留在 A 欄，絕不向右跳格！
+                const safeGroup = `"${(vol.group || "").replace(/"/g, '""')}"`;
+                const safeDisplayName = `"${(displayName || "").replace(/"/g, '""')}"`;
+
+                const row = [safeGroup, safeDisplayName, ...monthlyHours.map(h => h.toFixed(1)), yearlyTotal.toFixed(1), ...typeValues];
                 csvContent += row.join(",") + "\n";
             });
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const link = document.createElement("a");
