@@ -1022,18 +1022,25 @@
         }
 
         function approveRecord(uuid) {
-            const hourSelect = document.getElementById(`hour_${uuid}`); const minSelect = document.getElementById(`min_${uuid}`);
+            const hourSelect = document.getElementById(`hour_${uuid}`); 
+            const minSelect = document.getElementById(`min_${uuid}`);
+            if (!hourSelect || !minSelect) {
+                alert("找不到時間選擇元件，請重新整理頁面！");
+                return;
+            }
             const datePart = hourSelect.getAttribute('data-date'); 
             const newTime = `${datePart}T${hourSelect.value}:${minSelect.value}`; 
             
-            const serviceType = document.getElementById(`srv_${uuid}`).value;
-            const multiplier = document.getElementById(`mul_${uuid}`).value;
-            const extraHours = document.getElementById(`ext_${uuid}`).value;
-            const remark = document.getElementById(`rem_${uuid}`).value;
+            const serviceType = document.getElementById(`srv_${uuid}`) ? document.getElementById(`srv_${uuid}`).value : "志工服務";
+            const multiplier = document.getElementById(`mul_${uuid}`) ? document.getElementById(`mul_${uuid}`).value : 1;
+            const extraHours = document.getElementById(`ext_${uuid}`) ? document.getElementById(`ext_${uuid}`).value : 0;
+            const remark = document.getElementById(`rem_${uuid}`) ? document.getElementById(`rem_${uuid}`).value : "";
             const shiftInput = document.getElementById(`shift_${uuid}`);
             const shiftInfo = shiftInput ? shiftInput.value : "";
             
-            const btn = event.target; btn.disabled = true; btn.innerText = "處理中...";
+            const btn = document.getElementById(`btnApprove_${uuid}`);
+            if (btn) { btn.disabled = true; btn.innerText = "處理中..."; }
+
             fetch(GAS_URL, {
                 method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify({ 
@@ -1042,8 +1049,15 @@
                     remark: remark, staffName: dbUserName, shiftInfo: shiftInfo
                 })
             }).then(res => res.json()).then(result => {
-                if(result.status === "success") fetchPendingRecords(); 
-                else { alert(result.message); btn.disabled = false; btn.innerText = "✅ 確認核准"; }
+                if (result.status === "success") {
+                    fetchPendingRecords(); 
+                } else { 
+                    alert("審核未成功：" + (result.message || "未知錯誤")); 
+                    if (btn) { btn.disabled = false; btn.innerText = "✅ 確認核准"; }
+                }
+            }).catch(err => {
+                alert("網路或伺服器連線異常：" + err);
+                if (btn) { btn.disabled = false; btn.innerText = "✅ 確認核准"; }
             });
         }
 
