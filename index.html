@@ -203,7 +203,7 @@
                     <button class="refresh-btn" onclick="openManualEntryUI()" style="background:#fff3e0; color:#e65100; font-weight:bold;">➕ 補登</button>
                     <button class="refresh-btn" onclick="openAdminQueryUI()" style="background:#e0f2f1; color:#00897b; font-weight:bold;">📊 總查詢</button>
                     <button class="refresh-btn" onclick="openStaffAnomalyUI()" style="background:#fef2f2; color:#dc2626; font-weight:bold;">🚨 缺勤異常</button>
-                    <button class="refresh-btn" id="btnClearCache" onclick="clearSystemCacheUI(event)" style="background:#f1f5f9; color:#475569; font-weight:bold;">⚡ 重置快取</button>
+                    <button class="refresh-btn" onclick="clearSystemCacheUI()" style="background:#f1f5f9; color:#475569; font-weight:bold;">⚡ 重置快取</button>
                     <button class="refresh-btn" onclick="fetchPendingRecords()">🔄 重整</button>
                 </div>
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -1022,19 +1022,25 @@
         }
 
         function approveRecord(uuid) {
-            const hourSelect = document.getElementById(`hour_${uuid}`); const minSelect = document.getElementById(`min_${uuid}`);
+            const hourSelect = document.getElementById(`hour_${uuid}`); 
+            const minSelect = document.getElementById(`min_${uuid}`);
+            if (!hourSelect || !minSelect) {
+                alert("找不到時間選擇元件，請重新整理頁面！");
+                return;
+            }
             const datePart = hourSelect.getAttribute('data-date'); 
             const newTime = `${datePart}T${hourSelect.value}:${minSelect.value}`; 
             
-            const serviceType = document.getElementById(`srv_${uuid}`).value;
-            const multiplier = document.getElementById(`mul_${uuid}`).value;
-            const extraHours = document.getElementById(`ext_${uuid}`).value;
-            const remark = document.getElementById(`rem_${uuid}`).value;
+            const serviceType = document.getElementById(`srv_${uuid}`) ? document.getElementById(`srv_${uuid}`).value : "志工服務";
+            const multiplier = document.getElementById(`mul_${uuid}`) ? document.getElementById(`mul_${uuid}`).value : 1;
+            const extraHours = document.getElementById(`ext_${uuid}`) ? document.getElementById(`ext_${uuid}`).value : 0;
+            const remark = document.getElementById(`rem_${uuid}`) ? document.getElementById(`rem_${uuid}`).value : "";
             const shiftInput = document.getElementById(`shift_${uuid}`);
             const shiftInfo = shiftInput ? shiftInput.value : "";
             
             const btn = document.getElementById(`btnApprove_${uuid}`);
             if (btn) { btn.disabled = true; btn.innerText = "處理中..."; }
+
             fetch(GAS_URL, {
                 method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify({ 
@@ -1043,17 +1049,18 @@
                     remark: remark, staffName: dbUserName, shiftInfo: shiftInfo
                 })
             }).then(res => res.json()).then(result => {
-                if(result.status === "success") {
+                if (result.status === "success") {
                     fetchPendingRecords(); 
                 } else { 
-                    alert(result.message); 
+                    alert("審核失敗：" + (result.message || "未知錯誤")); 
                     if (btn) { btn.disabled = false; btn.innerText = "✅ 確認核准"; }
                 }
             }).catch(err => {
-                alert("網路異常：" + err.message);
+                alert("網路或連線異常：" + err);
                 if (btn) { btn.disabled = false; btn.innerText = "✅ 確認核准"; }
             });
         }
+
 
         function switchSection(targetSection) {
             document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
@@ -1849,23 +1856,19 @@
             }).catch(err => { alert("網路異常：" + err.message); buildDynamicServiceOptions(); });
         }
 
-        function clearSystemCacheUI(e) {
+        function clearSystemCacheUI() {
             if (!confirm("⚠️ 確定要重置全系統名冊快取嗎？\n\n當您在試算表手動新增了志工、調整了組別或更動了權限時，執行此操作可讓所有名冊異動「立即生效」！")) return;
-            const btn = document.getElementById('btnClearCache') || ((typeof e !== 'undefined' && e && e.target) ? e.target : null);
-            const originalText = btn ? btn.innerText : "⚡ 重置快取";
-            if (btn) {
-                btn.innerText = "重置中 ⏳...";
-                btn.disabled = true;
-            }
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "重置中 ⏳...";
+            btn.disabled = true;
             fetch(GAS_URL, {
                 method: "POST",
                 headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify({ action: "clearSystemCache", userId: currentUserId })
             }).then(res => res.json()).then(result => {
-                if (btn) {
-                    btn.innerText = originalText;
-                    btn.disabled = false;
-                }
+                btn.innerText = originalText;
+                btn.disabled = false;
                 if (result.status === "success") {
                     alert(result.message);
                     checkBindingStatus();
@@ -1873,10 +1876,8 @@
                     alert("❌ 操作失敗：" + result.message);
                 }
             }).catch(err => {
-                if (btn) {
-                    btn.innerText = originalText;
-                    btn.disabled = false;
-                }
+                btn.innerText = originalText;
+                btn.disabled = false;
                 alert("網路異常：" + err.message);
             });
         }
